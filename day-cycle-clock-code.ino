@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
+#include <TimeLord.h>
 
 
 #define BUTTON_UP   16
@@ -15,14 +16,14 @@ Pushbutton button_down(BUTTON_DOWN);
 
 
 RTC_DS1307 rtc;
-
+String daysOfTheMonth[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec"};
 
 #define __CS 8
 #define __DC 9
 #define __A0 10
 TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
 
-// Color definitions
+
 #define BLACK   0x0000
 #define YELLOW  0xFFE0  
 #define WHITE   0xFFFF
@@ -30,17 +31,25 @@ uint16_t sunYellow = 0xccff00;
 uint16_t bgColor = 0xFFFF;
 
 
-String menu_titles[] = {"Hour","Min","Day","Mon","Year","Lat","Long"};
 int latitude = 40;
 int longitude = -75;
+int time_zone = -5;
+
+TimeLord tardis; 
+byte today[6] = {};
 
 void setup()
 {
   Serial.begin(115200);
   tft.begin();
   rtc.begin();
+
+  tardis.TimeZone(time_zone * 60);
+  tardis.Position(latitude, longitude);
+  
+  
+  
   drawSun();
-  printDateTime();
 }
 
 /**
@@ -80,33 +89,58 @@ int selectValue(String title, int value, int val_min, int val_max){
 
 void settingsMenu(){
   Serial.println("Setting");
-  int new_hour = selectValue("Hour", rtc.now().hour(), 0, 23); 
-  int new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
   int new_month = selectValue("Mnth", rtc.now().month(), 1, 12);
   int new_day = selectValue("Day", rtc.now().day(), 1, 31);
   int new_year = selectValue("Year", rtc.now().year(), 2000, 2100);
+  int new_hour = selectValue("Hour", rtc.now().hour(), 0, 23); 
+  int new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
   rtc.adjust(DateTime(new_year, new_month, new_day, new_hour, new_minute, 30));
+  byte today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year()};
   latitude = selectValue("Lat", latitude, -90, 90);
   longitude = selectValue("Long", longitude, -180, 180);
+  tardis.Position(latitude, longitude);
 }
 
 
-void printDateTime(){
+void printTime(int time_hour, int time_min){
   DateTime now = rtc.now();
-//  tft.fillScreen(WHITE);
   fillValue();
   tft.setCursor(7, 48);
   tft.setTextColor(BLACK);
   tft.setTextSize(4);
-  tft.print(now.hour(), DEC);
+  tft.print(time_hour, DEC);
   tft.print(':');
-  tft.println(now.minute(), DEC);
-  tft.setTextSize(4);
-//  tft.print(now.month(), DEC);
-//  tft.print('/');
-//  tft.println(now.day(), DEC);
-//  tft.print(now.year(), DEC);
-  delay(1000);
+  tft.println(time_min, DEC);
+}
+
+void printDate(){
+  DateTime now = rtc.now();
+  fillValue();
+  tft.setCursor(16, 42);
+  tft.setTextColor(BLACK);
+  tft.setTextSize(3);
+  tft.print(daysOfTheMonth[now.month()]);
+  tft.print(' ');
+  tft.println(now.day(), DEC);
+  tft.setCursor(28, 72);
+  tft.print(now.year(), DEC);
+}
+
+
+void displayTime(){
+  printTime(rtc.now().hour(), rtc.now().minute());
+  delay(2000);
+  printDate();
+  delay(2000);
+  byte today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year()};
+  tardis.SunRise(today);
+  printMenuTitle("Rise");
+  printTime((int) today[tl_hour],(int) today[tl_minute]);
+  delay(2000);
+  tardis.SunSet(today);
+  printMenuTitle("Set");
+  printTime((int) today[tl_hour],(int) today[tl_minute]);
+  delay(2000);
 }
 
 void drawSun(){
@@ -124,12 +158,19 @@ void printMenuTitle(String titleString){
 }
 
 void printValue(int value){
-  fillValue();
-//  int x_offset = (4 - titleString.length()) * 8;
-  tft.setCursor(7, 48);
+  int val_length = String(value).length();
+  int cursor_x;
   tft.setTextColor(BLACK);
-  tft.setTextSize(4);
-  tft.print(value, DEC);
+  if (val_length <= 5){
+    tft.setTextSize(4);
+    cursor_x = 6 + (5-val_length) * 12;
+  } else{
+    tft.setTextSize(3);
+    cursor_x = 6 + (5-val_length) * 10;
+  }
+  fillValue();
+  tft.setCursor(cursor_x, 48);
+  tft.print(value);
 }
 
 void fillMenuTitle(){
@@ -142,12 +183,18 @@ void fillValue(){
 
 void loop()
 {
+  //Settings Menu
   if (button_left.getSingleDebouncedPress()) {
     settingsMenu();
     drawSun();
-    printDateTime();
   }
-  
+  //Display Time, Date, SuneRise, Sunset
+  if (button_up.getSingleDebouncedPress()) {
+    displayTime();
+    drawSun();
+  }
+
+
   
 
 }
