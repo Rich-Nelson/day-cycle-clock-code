@@ -4,6 +4,7 @@
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
 #include <TimeLord.h>
+#include "FastLED.h"
 
 
 #define BUTTON_UP   16
@@ -16,7 +17,7 @@ Pushbutton button_down(BUTTON_DOWN);
 
 
 RTC_DS1307 rtc;
-String daysOfTheMonth[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec"};
+String daysOfTheMonth[13] = {"","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec"};
 
 #define __CS 8
 #define __DC 9
@@ -31,12 +32,19 @@ uint16_t sunYellow = 0xccff00;
 uint16_t bgColor = 0xFFFF;
 
 
+TimeLord tardis; 
+byte today[6] = {};
+
+
+//Initial Settings
 int latitude = 40;
 int longitude = -75;
 int time_zone = -5;
 
-TimeLord tardis; 
-byte today[6] = {};
+//Calulated Time Settings
+//unsigned char sunrise[2];
+//unsigned char sunset[2] = { }; 
+float moon_phase;
 
 void setup()
 {
@@ -46,7 +54,7 @@ void setup()
 
   tardis.TimeZone(time_zone * 60);
   tardis.Position(latitude, longitude);
-  
+  //tardis.DstRules(3,2,11,1, 60);
   
   
   drawSun();
@@ -95,7 +103,6 @@ void settingsMenu(){
   int new_hour = selectValue("Hour", rtc.now().hour(), 0, 23); 
   int new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
   rtc.adjust(DateTime(new_year, new_month, new_day, new_hour, new_minute, 30));
-  byte today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year()};
   latitude = selectValue("Lat", latitude, -90, 90);
   longitude = selectValue("Long", longitude, -180, 180);
   tardis.Position(latitude, longitude);
@@ -126,21 +133,34 @@ void printDate(){
   tft.print(now.year(), DEC);
 }
 
+void calculateDayParams (){
+  tardis.Position(latitude, longitude);
+  byte sunrise[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year()-2000};
+  tardis.SunRise(sunrise);
+  byte sunset[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year()-2000};
+  tardis.SunSet(sunset);
+  byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year()-2000};
+  moon_phase = tardis.MoonPhase(phase_today);
+
+  printMenuTitle("Rise");
+  printTime(sunrise[tl_hour],sunrise[tl_minute]);
+  delay(2000);
+  printMenuTitle("Set");
+  printTime(sunset[tl_hour],sunset[tl_minute]);
+  delay(2000);
+  printMenuTitle("Moon");
+  printValue(moon_phase*100);
+  delay(2000);
+}
 
 void displayTime(){
+  calculateDayParams ();
+  drawSun();
   printTime(rtc.now().hour(), rtc.now().minute());
   delay(2000);
   printDate();
   delay(2000);
-  byte today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year()};
-  tardis.SunRise(today);
-  printMenuTitle("Rise");
-  printTime((int) today[tl_hour],(int) today[tl_minute]);
-  delay(2000);
-  tardis.SunSet(today);
-  printMenuTitle("Set");
-  printTime((int) today[tl_hour],(int) today[tl_minute]);
-  delay(2000);
+
 }
 
 void drawSun(){
@@ -194,6 +214,9 @@ void loop()
     drawSun();
   }
 
+  if (button_down.getSingleDebouncedPress()) {
+
+  }
 
   
 
