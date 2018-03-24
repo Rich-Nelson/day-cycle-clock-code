@@ -5,6 +5,10 @@
 #include <TFT_ILI9163C.h>
 #include <TimeLord.h>
 #include "FastLED.h"
+#include "ColorState.h"
+
+
+ColorState colorstate;
 
 
 #define BUTTON_UP   16
@@ -18,6 +22,9 @@ Pushbutton button_down(BUTTON_DOWN);
 
 RTC_DS1307 rtc;
 String daysOfTheMonth[13] = {"","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec"};
+
+
+
 
 #define __CS 8
 #define __DC 9
@@ -142,6 +149,8 @@ void calculateDayParams (){
   byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year()-2000};
   moon_phase = tardis.MoonPhase(phase_today);
 
+  colorstate.RiseSetTimes(sunrise[tl_hour],sunrise[tl_minute],sunset[tl_hour],sunset[tl_minute]);
+
   printMenuTitle("Rise");
   printTime(sunrise[tl_hour],sunrise[tl_minute]);
   delay(2000);
@@ -216,6 +225,8 @@ void loop()
 
   if (button_down.getSingleDebouncedPress()) {
 
+    Serial.println(colorstate.updateColors());
+    Serial.println(colorstate.riseTime());
   }
 
   
