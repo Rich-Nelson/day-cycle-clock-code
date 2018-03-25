@@ -8,7 +8,7 @@
 #include "ColorState.h"
 
 
-ColorState colorstate;
+ColorState colorstate(true);
 
 
 #define BUTTON_UP   16
@@ -21,7 +21,7 @@ Pushbutton button_down(BUTTON_DOWN);
 
 
 RTC_DS1307 rtc;
-String daysOfTheMonth[13] = {"","Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec"};
+String daysOfTheMonth[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec"};
 
 
 
@@ -33,25 +33,23 @@ TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
 
 
 #define BLACK   0x0000
-#define YELLOW  0xFFE0  
+#define YELLOW  0xFFE0
 #define WHITE   0xFFFF
-uint16_t sunYellow = 0xccff00;
-uint16_t bgColor = 0xFFFF;
+short sunYellow = 0xccff00;
+short bgColor = 0xFFFF;
 
 
-TimeLord tardis; 
-byte today[6] = {};
-
+TimeLord tardis;
 
 //Initial Settings
-int latitude = 40;
-int longitude = -75;
-int time_zone = -5;
+signed char latitude = 40;
+signed short longitude = -75;
+signed char time_zone = -5;
 
 //Calulated Time Settings
-//unsigned char sunrise[2];
-//unsigned char sunset[2] = { }; 
-float moon_phase;
+unsigned short sunrise_minute;
+unsigned short sunset_minute;
+unsigned char moon_phase;
 
 void setup()
 {
@@ -62,8 +60,8 @@ void setup()
   tardis.TimeZone(time_zone * 60);
   tardis.Position(latitude, longitude);
   //tardis.DstRules(3,2,11,1, 60);
-  
-  
+
+
   drawSun();
 }
 
@@ -71,29 +69,29 @@ void setup()
     Shows current name and value of a variabl on the screen
     Allow the value to be adjusted via buttons
     Returns the new value
-    
+
     @param title the name of the variable being changed
     @param value the current value of the variable
     @param val_min the minumum value for this variable
     @param val_mxn the maimum value for this variable
     @return The new value
 */
-int selectValue(String title, int value, int val_min, int val_max){
+int selectValue(String title, int value, int val_min, int val_max) {
   printMenuTitle(title);
   printValue(value);
-  while(!button_left.getSingleDebouncedPress()){
-    if(button_up.getSingleDebouncedPress()){
-      if(value<val_max){
+  while (!button_left.getSingleDebouncedPress()) {
+    if (button_up.getSingleDebouncedPress()) {
+      if (value < val_max) {
         value++;
-      }else{
+      } else {
         value = val_min;
       }
       printValue(value);
     }
-    if(button_down.getSingleDebouncedPress()){
-      if(value>val_min){
+    if (button_down.getSingleDebouncedPress()) {
+      if (value > val_min) {
         value--;
-      }else{
+      } else {
         value = val_max;
       }
       printValue(value);
@@ -102,21 +100,22 @@ int selectValue(String title, int value, int val_min, int val_max){
   return value;
 }
 
-void settingsMenu(){
+void settingsMenu() {
   Serial.println("Setting");
-  int new_month = selectValue("Mnth", rtc.now().month(), 1, 12);
-  int new_day = selectValue("Day", rtc.now().day(), 1, 31);
-  int new_year = selectValue("Year", rtc.now().year(), 2000, 2100);
-  int new_hour = selectValue("Hour", rtc.now().hour(), 0, 23); 
-  int new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
+  char new_month = selectValue("Mnth", rtc.now().month(), 1, 12);
+  char new_day = selectValue("Day", rtc.now().day(), 1, 31);
+  short new_year = selectValue("Year", rtc.now().year(), 2000, 2100);
+  char new_hour = selectValue("Hour", rtc.now().hour(), 0, 23);
+  char new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
   rtc.adjust(DateTime(new_year, new_month, new_day, new_hour, new_minute, 30));
   latitude = selectValue("Lat", latitude, -90, 90);
   longitude = selectValue("Long", longitude, -180, 180);
   tardis.Position(latitude, longitude);
+
 }
 
 
-void printTime(int time_hour, int time_min){
+void printTime(int time_hour, int time_min) {
   DateTime now = rtc.now();
   fillValue();
   tft.setCursor(7, 48);
@@ -127,7 +126,7 @@ void printTime(int time_hour, int time_min){
   tft.println(time_min, DEC);
 }
 
-void printDate(){
+void printDate() {
   DateTime now = rtc.now();
   fillValue();
   tft.setCursor(16, 42);
@@ -140,44 +139,44 @@ void printDate(){
   tft.print(now.year(), DEC);
 }
 
-void calculateDayParams (){
+void calculateDayParams () {
   tardis.Position(latitude, longitude);
-  byte sunrise[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year()-2000};
+  byte sunrise[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
   tardis.SunRise(sunrise);
-  byte sunset[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year()-2000};
+  sunrise_minute = (sunrise[tl_hour] * 60) + sunrise[tl_minute];
+  byte sunset[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
   tardis.SunSet(sunset);
-  byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year()-2000};
-  moon_phase = tardis.MoonPhase(phase_today);
+  sunset_minute = (sunset[tl_hour] * 60) + sunset[tl_minute];
+  byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
+  moon_phase = tardis.MoonPhase(phase_today)*100;
 
-  colorstate.RiseSetTimes(sunrise[tl_hour],sunrise[tl_minute],sunset[tl_hour],sunset[tl_minute]);
-
-  printMenuTitle("Rise");
-  printTime(sunrise[tl_hour],sunrise[tl_minute]);
-  delay(2000);
-  printMenuTitle("Set");
-  printTime(sunset[tl_hour],sunset[tl_minute]);
-  delay(2000);
-  printMenuTitle("Moon");
-  printValue(moon_phase*100);
-  delay(2000);
 }
 
-void displayTime(){
+void displayTime() {
   calculateDayParams ();
-  drawSun();
+
   printTime(rtc.now().hour(), rtc.now().minute());
   delay(2000);
   printDate();
   delay(2000);
-
+  drawSun();
+  printMenuTitle("Rise");
+  printTime(sunrise_minute/60, sunrise_minute%60);
+  delay(2000);
+  printMenuTitle("Set");
+  printTime(sunset_minute/60, sunset_minute%60);
+  delay(2000);
+  printMenuTitle("Moon");
+  printValue(moon_phase);
+  delay(2000);
 }
 
-void drawSun(){
-  tft.fillCircle(64,64, 62, sunYellow);
+void drawSun() {
+  tft.fillCircle(64, 64, 62, sunYellow);
   bgColor = sunYellow;
-  }
+}
 
-void printMenuTitle(String titleString){
+void printMenuTitle(String titleString) {
   fillMenuTitle();
   int x_offset = (4 - titleString.length()) * 8;
   tft.setCursor(32 + x_offset, 16);
@@ -186,27 +185,27 @@ void printMenuTitle(String titleString){
   tft.print(titleString);
 }
 
-void printValue(int value){
+void printValue(int value) {
   int val_length = String(value).length();
   int cursor_x;
   tft.setTextColor(BLACK);
-  if (val_length <= 5){
+  if (val_length <= 5) {
     tft.setTextSize(4);
-    cursor_x = 6 + (5-val_length) * 12;
-  } else{
+    cursor_x = 6 + (5 - val_length) * 12;
+  } else {
     tft.setTextSize(3);
-    cursor_x = 6 + (5-val_length) * 10;
+    cursor_x = 6 + (5 - val_length) * 10;
   }
   fillValue();
   tft.setCursor(cursor_x, 48);
   tft.print(value);
 }
 
-void fillMenuTitle(){
+void fillMenuTitle() {
   tft.fillRect(32, 16, 70, 24, bgColor);
 }
 
-void fillValue(){
+void fillValue() {
   tft.fillRect(7, 48, 118, 30, bgColor);
 }
 
@@ -224,12 +223,11 @@ void loop()
   }
 
   if (button_down.getSingleDebouncedPress()) {
-
-    Serial.println(colorstate.updateColors());
-    Serial.println(colorstate.riseTime());
+    calculateDayParams ();    
+    Serial.println(colorstate.transitionTimes(sunrise_minute, sunset_minute));
   }
 
-  
+
 
 }
 
