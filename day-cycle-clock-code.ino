@@ -8,7 +8,7 @@
 #include "ColorState.h"
 
 
-ColorState colorstate(true);
+ColorState colorstate(false);
 
 
 #define BUTTON_UP   16
@@ -61,8 +61,9 @@ void setup()
   tardis.Position(latitude, longitude);
   //tardis.DstRules(3,2,11,1, 60);
 
-
   drawSun();
+
+  test();
 }
 
 /**
@@ -223,11 +224,19 @@ void loop()
   }
 
   if (button_down.getSingleDebouncedPress()) {
-    calculateDayParams ();    
-    Serial.println(colorstate.transitionTimes(sunrise_minute, sunset_minute));
+    test();
   }
 
+}
 
+void test(){
+  calculateDayParams ();    
+  colorstate.transitionTimes(sunrise_minute, sunset_minute);
+  uint16_t current_time_in_minutes = rtc.now().hour() * 60 + rtc.now().minute();
 
+  
+  colorstate.nextTransition(current_time_in_minutes);
+  Serial.print("Next Transition: ");
+  Serial.println(colorstate.next_transition);
 }
 
