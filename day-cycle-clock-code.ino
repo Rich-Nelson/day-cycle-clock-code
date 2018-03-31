@@ -32,30 +32,49 @@ String daysOfTheMonth[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"
 TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
 
 
+
+#define NUM_LEDS 45
+#define NUM_ROWS 3
+#define LED_PIN 6
+#define LED_TYPE    WS2812B
+#define COLOR_ORDER GRB
+
+int color[3];
+int red;
+int green;
+int blue;
+int row;
+
+CRGB leds[NUM_LEDS];
+
+
+
+
 #define BLACK   0x0000
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
-short sunYellow = 0xccff00;
-short bgColor = 0xFFFF;
+int16_t sunYellow = 0xccff00;
+int16_t bgColor = 0xFFFF;
 
 
 TimeLord tardis;
 
 //Initial Settings
-signed char latitude = 40;
-signed short longitude = -75;
-signed char time_zone = -5;
+int8_t latitude = 40;
+int16_t longitude = -75;
+int8_t time_zone = -5;
 
 //Calulated Time Settings
-unsigned short sunrise_minute;
-unsigned short sunset_minute;
-unsigned char moon_phase;
+uint16_t sunrise_minute;
+uint16_t sunset_minute;
+uint8_t moon_phase;
 
 void setup()
 {
   Serial.begin(115200);
   tft.begin();
   rtc.begin();
+  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 
   tardis.TimeZone(time_zone * 60);
   tardis.Position(latitude, longitude);
@@ -65,6 +84,34 @@ void setup()
 
   test();
 }
+
+
+
+void stripRGBRow(int r, int g, int b, int row) {
+  int first_led_in_row = NUM_LEDS / NUM_ROWS * (row - 1);
+  int last_led_in_row  = NUM_LEDS / NUM_ROWS * row;
+  for (int x = first_led_in_row; x <  last_led_in_row; x++) {
+    leds[x] = CRGB(r, g, b);
+  }
+  FastLED.show();
+}
+
+void stripHSVRow(int h, int s, int v, int row) {
+  int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
+  int last_led_in_row  = NUM_LEDS / NUM_ROWS * (row + 1);
+  for (int x = first_led_in_row; x < last_led_in_row; x++) {
+    leds[x] = CHSV(h, s, v);
+  }
+  FastLED.show();
+}
+
+void stripHSV(int colors[NUM_ROWS][3]){
+  for (int row; row < NUM_ROWS; row++){
+    stripHSVRow(colors[row][0], colors[row][1], colors[row][2], row);
+  }
+}
+
+
 
 /**
     Shows current name and value of a variabl on the screen
@@ -103,11 +150,11 @@ int selectValue(String title, int value, int val_min, int val_max) {
 
 void settingsMenu() {
   Serial.println("Setting");
-  char new_month = selectValue("Mnth", rtc.now().month(), 1, 12);
-  char new_day = selectValue("Day", rtc.now().day(), 1, 31);
-  short new_year = selectValue("Year", rtc.now().year(), 2000, 2100);
-  char new_hour = selectValue("Hour", rtc.now().hour(), 0, 23);
-  char new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
+  int8_t new_month = selectValue("Mnth", rtc.now().month(), 1, 12);
+  int8_t new_day = selectValue("Day", rtc.now().day(), 1, 31);
+  int16_t new_year = selectValue("Year", rtc.now().year(), 2000, 2100);
+  int8_t new_hour = selectValue("Hour", rtc.now().hour(), 0, 23);
+  int8_t new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
   rtc.adjust(DateTime(new_year, new_month, new_day, new_hour, new_minute, 30));
   latitude = selectValue("Lat", latitude, -90, 90);
   longitude = selectValue("Long", longitude, -180, 180);
@@ -149,7 +196,7 @@ void calculateDayParams () {
   tardis.SunSet(sunset);
   sunset_minute = (sunset[tl_hour] * 60) + sunset[tl_minute];
   byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
-  moon_phase = tardis.MoonPhase(phase_today)*100;
+  moon_phase = tardis.MoonPhase(phase_today) * 100;
 
 }
 
@@ -162,10 +209,10 @@ void displayTime() {
   delay(2000);
   drawSun();
   printMenuTitle("Rise");
-  printTime(sunrise_minute/60, sunrise_minute%60);
+  printTime(sunrise_minute / 60, sunrise_minute % 60);
   delay(2000);
   printMenuTitle("Set");
-  printTime(sunset_minute/60, sunset_minute%60);
+  printTime(sunset_minute / 60, sunset_minute % 60);
   delay(2000);
   printMenuTitle("Moon");
   printValue(moon_phase);
@@ -225,18 +272,31 @@ void loop()
 
   if (button_down.getSingleDebouncedPress()) {
     test();
+//    cycle();
   }
 
 }
 
-void test(){
-  calculateDayParams ();    
+void test() {
+  calculateDayParams ();
   colorstate.transitionTimes(sunrise_minute, sunset_minute);
-  uint16_t current_time_in_minutes = rtc.now().hour() * 60 + rtc.now().minute();
+//  uint16_t current_time_in_minutes = rtc.now().hour() * 60 + rtc.now().minute();
+  for (int current_time_in_minutes = 1; current_time_in_minutes < 1440 ; current_time_in_minutes++){
+//   delay(10);
+    colorstate.nextTransition(current_time_in_minutes);
+    stripHSV(colorstate.currentColors(current_time_in_minutes));
+  }
 
-  
-  colorstate.nextTransition(current_time_in_minutes);
-  Serial.print("Next Transition: ");
-  Serial.println(colorstate.next_transition);
 }
 
+//
+//void cycle() {
+//  calculateDayParams ();
+//  colorstate.transitionTimes(sunrise_minute, sunset_minute);
+//  for (uint16_t current_time_in_minutes = 0; current_time_in_minutes < 1440 ; current_time_in_minutes++){
+//      colorstate.nextTransition(current_time_in_minutes);
+//      stripHSV(colorstate.currentColors(current_time_in_minutes));
+//      delay(50);
+//  }
+//
+//}
