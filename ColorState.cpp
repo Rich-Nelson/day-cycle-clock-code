@@ -18,11 +18,11 @@ bool ColorState::transitionTimes(int16_t sunrise_minute,
 
 
 
-  for (int8_t i = 0; i < transition_array_size; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    Serial.println(transition_time[i]);
-  }
+  // for (int8_t i = 0; i < transition_array_size; i++){
+  //   Serial.print(i);
+  //   Serial.print(" ");
+  //   Serial.println(transition_time[i]);
+  // }
 
 
 
@@ -78,7 +78,6 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
     // Serial.println(prev_transition);
     // Serial.print("next_transition: ");
     // Serial.println(next_transition);
-    int current_colors[3][3];
     for (int i=0; i < 3; i++){
       for (int j=0; j < 3; j++){
         // Serial.print(i);
@@ -94,8 +93,8 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
         float float_color_value = (float)colors[prev_transition][i][j] + (colors[next_transition][i][j] - colors[prev_transition][i][j])*transition_progress/100;
         current_colors[i][j] = static_cast<int>(float_color_value);
         //******************************
-        Serial.println(current_colors[i][j]); //commenting out breaks program?
-        //******************************
+        // Serial.println(current_colors[i][j]); //commenting out breaks program?
+        //****************S**************
       }
     }
 

@@ -81,20 +81,45 @@ void setup()
   //tardis.DstRules(3,2,11,1, 60);
 
   drawSun();
-
-  test();
 }
 
 
 
 void stripRGBRow(int r, int g, int b, int row) {
-  int first_led_in_row = NUM_LEDS / NUM_ROWS * (row - 1);
-  int last_led_in_row  = NUM_LEDS / NUM_ROWS * row;
+  int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
+  int last_led_in_row  = NUM_LEDS / NUM_ROWS * (row + 1);
   for (int x = first_led_in_row; x <  last_led_in_row; x++) {
     leds[x] = CRGB(r, g, b);
   }
   FastLED.show();
 }
+
+void stripRGB(int colors[NUM_ROWS][3]){
+      Serial.print("{");
+  for (int row; row < NUM_ROWS; row++){
+      Serial.print("{");
+      Serial.print(colors[row][0]);
+      Serial.print(", ");
+      Serial.print(colors[row][1]);
+      Serial.print(", ");
+      Serial.print(colors[row][2]);
+      Serial.print("}, ");
+    stripRGBRow(colors[row][0], colors[row][1], colors[row][2], row);
+  }
+      Serial.println("}");
+}
+
+//    Serial.print("{");
+//    for (int j = 0; j<3; j++){
+//      Serial.print("{");
+//      Serial.print(colorstate.colors[i][j][0]);
+//      Serial.print(", ");
+//      Serial.print(colorstate.colors[i][j][1]);
+//      Serial.print(", ");
+//      Serial.print(colorstate.colors[i][j][2]);
+//      Serial.print("}, ");
+//    }
+//    Serial.println("}");
 
 void stripHSVRow(int h, int s, int v, int row) {
   int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
@@ -271,32 +296,36 @@ void loop()
   }
 
   if (button_down.getSingleDebouncedPress()) {
-    test();
-//    cycle();
+    fastDayCycle();
   }
+
+  updateColorDisplay();
+  delay(5000);
 
 }
 
-void test() {
+void updateColorDisplay(){
   calculateDayParams ();
   colorstate.transitionTimes(sunrise_minute, sunset_minute);
-//  uint16_t current_time_in_minutes = rtc.now().hour() * 60 + rtc.now().minute();
-  for (int current_time_in_minutes = 1; current_time_in_minutes < 1440 ; current_time_in_minutes++){
-//   delay(10);
-    colorstate.nextTransition(current_time_in_minutes);
-    stripHSV(colorstate.currentColors(current_time_in_minutes));
+  uint16_t current_time_in_minutes = rtc.now().hour() * 60 + rtc.now().minute();
+  colorstate.nextTransition(current_time_in_minutes);
+  stripRGB(colorstate.currentColors(current_time_in_minutes));
+  
+
+}
+
+void fastDayCycle() {
+  calculateDayParams ();
+  colorstate.transitionTimes(sunrise_minute, sunset_minute);
+  for(uint16_t current_time_in_minutes = 1; current_time_in_minutes <1440; current_time_in_minutes =current_time_in_minutes+1){
+//       current_time_in_minutes = 375;
+    Serial.print("Time in minutes: ");
+    Serial.println(current_time_in_minutes);
+    Serial.print("NextTransition: ");
+    Serial.println(colorstate.nextTransition(current_time_in_minutes));
+    stripRGB(colorstate.currentColors(current_time_in_minutes));
+    delay(10);
   }
 
 }
 
-//
-//void cycle() {
-//  calculateDayParams ();
-//  colorstate.transitionTimes(sunrise_minute, sunset_minute);
-//  for (uint16_t current_time_in_minutes = 0; current_time_in_minutes < 1440 ; current_time_in_minutes++){
-//      colorstate.nextTransition(current_time_in_minutes);
-//      stripHSV(colorstate.currentColors(current_time_in_minutes));
-//      delay(50);
-//  }
-//
-//}
