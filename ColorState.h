@@ -17,10 +17,12 @@
 #define night_start 6
 #define night_mid 7
 
+#define number_of_transition_times 8
 
+#define eastern_horizon 0
+#define western_horizon 180
 
-
-#define transition_array_size 8
+#define number_of_transition_times 8
 
 #define rise_set_duration 180
 
@@ -33,12 +35,15 @@ class ColorState {
                          int16_t sunset_minute);
 
     // Mehods
-    bool updateColors();
+    bool updateColors(int16_t);
     int8_t nextTransition(int16_t);
     int currentColors(int16_t);
+    uint8_t currentAngle(int16_t);
     //variables
     int8_t next_transition;
     int8_t prev_transition;
+    uint8_t current_angle;
+    bool daytime;
     int current_colors[3][3];
     int colors[8][3][3] = {
                             {{4,35,115},{35,30,25},{0,15,52}},
@@ -52,7 +57,7 @@ class ColorState {
                           };
 
   private:
-    int16_t transition_time[transition_array_size] = {};
+    int16_t transition_time[number_of_transition_times] = {};
     bool _debug_print;
     int16_t prev_transition_time;
     int16_t next_transition_time;

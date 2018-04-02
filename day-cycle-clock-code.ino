@@ -4,11 +4,17 @@
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
 #include <TimeLord.h>
+#include <Servo.h>
 #include "FastLED.h"
 #include "ColorState.h"
 
 
+
+
 ColorState colorstate(false);
+
+#define SERVO_PIN 3
+Servo servo; 
 
 
 #define BUTTON_UP   16
@@ -282,6 +288,43 @@ void fillValue() {
   tft.fillRect(7, 48, 118, 30, bgColor);
 }
 
+uint16_t currentTimeInMinutes(){
+   return rtc.now().hour() * 60 + rtc.now().minute();
+}
+
+
+void updateColorDisplay(){
+  calculateDayParams ();
+  colorstate.transitionTimes(sunrise_minute, sunset_minute);
+  colorstate.updateColors(currentTimeInMinutes());
+  stripRGB(colorstate.current_colors);
+  
+
+}
+
+void fastDayCycle() {
+  calculateDayParams ();
+  colorstate.transitionTimes(sunrise_minute, sunset_minute);
+//  servo.attach(SERVO_PIN);
+  uint8_t servo_last_pos;
+  for(uint16_t current_time_in_minutes = 1; current_time_in_minutes <1440; current_time_in_minutes =current_time_in_minutes+1){
+    colorstate.updateColors(current_time_in_minutes);
+    stripRGB(colorstate.current_colors);
+//    if(colorstate.current_angle != servo_last_pos){
+//      
+//      Serial.println(colorstate.current_angle);
+//      servo.write(colorstate.current_angle); 
+//      servo_last_pos = colorstate.current_angle;
+//    }
+    delay(15);
+    
+    
+    
+    
+  }
+  servo.detach();
+}
+
 void loop()
 {
   //Settings Menu
@@ -297,35 +340,11 @@ void loop()
 
   if (button_down.getSingleDebouncedPress()) {
     fastDayCycle();
+    updateColorDisplay();
   }
 
-  updateColorDisplay();
-  delay(5000);
 
-}
 
-void updateColorDisplay(){
-  calculateDayParams ();
-  colorstate.transitionTimes(sunrise_minute, sunset_minute);
-  uint16_t current_time_in_minutes = rtc.now().hour() * 60 + rtc.now().minute();
-  colorstate.nextTransition(current_time_in_minutes);
-  stripRGB(colorstate.currentColors(current_time_in_minutes));
-  
-
-}
-
-void fastDayCycle() {
-  calculateDayParams ();
-  colorstate.transitionTimes(sunrise_minute, sunset_minute);
-  for(uint16_t current_time_in_minutes = 1; current_time_in_minutes <1440; current_time_in_minutes =current_time_in_minutes+1){
-//       current_time_in_minutes = 375;
-    Serial.print("Time in minutes: ");
-    Serial.println(current_time_in_minutes);
-    Serial.print("NextTransition: ");
-    Serial.println(colorstate.nextTransition(current_time_in_minutes));
-    stripRGB(colorstate.currentColors(current_time_in_minutes));
-    delay(10);
-  }
 
 }
 

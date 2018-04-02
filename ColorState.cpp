@@ -18,7 +18,7 @@ bool ColorState::transitionTimes(int16_t sunrise_minute,
 
 
 
-  // for (int8_t i = 0; i < transition_array_size; i++){
+  // for (int8_t i = 0; i < number_of_transition_times; i++){
   //   Serial.print(i);
   //   Serial.print(" ");
   //   Serial.println(transition_time[i]);
@@ -32,7 +32,7 @@ bool ColorState::transitionTimes(int16_t sunrise_minute,
 
 int8_t ColorState::nextTransition(int16_t current_time_in_minutes){
 
-    for(int8_t i = 0; i < transition_array_size; i++){
+    for(int8_t i = 0; i < number_of_transition_times; i++){
 
       if (i == night_end){
         prev_transition_time = 0;
@@ -101,7 +101,29 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
     return current_colors;
 }
 
-bool ColorState::updateColors() {
+uint8_t ColorState::currentAngle(int16_t current_time_in_minutes){
+  if (next_transition >= rise_peak &&  next_transition <= night_start){
+    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)*(current_time_in_minutes - transition_time[night_end])/(transition_time[night_start] - transition_time[night_end]));
+    // Serial.print("SUN Angle: ");
+    daytime = 1;
+  } else if (next_transition == night_mid){
+    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon) - (western_horizon - eastern_horizon)/2*(current_time_in_minutes - transition_time[night_start])/(transition_time[night_mid] - transition_time[night_start]));
+    // Serial.print("MOON Rising: ");
+    daytime = 0;
+  } else if (next_transition == night_end){
+    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)/2 - (western_horizon - eastern_horizon)/2*(current_time_in_minutes)/(transition_time[night_end]));
+    // Serial.print("MOON Setting: ");
+    daytime = 0;
+  }
 
+
+  // Serial.println(current_angle);
+  return current_angle;
+}
+
+bool ColorState::updateColors(int16_t current_time_in_minutes) {
+  nextTransition(current_time_in_minutes);
+  currentColors(current_time_in_minutes);
+  currentAngle(current_time_in_minutes);
   return true;
 }
