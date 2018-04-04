@@ -20,9 +20,7 @@
 #define number_of_transition_times 8
 
 #define eastern_horizon 0
-#define western_horizon 180
-
-#define number_of_transition_times 8
+#define western_horizon 170
 
 #define rise_set_duration 180
 

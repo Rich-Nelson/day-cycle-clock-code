@@ -13,8 +13,10 @@
 
 ColorState colorstate(false);
 
+
 #define SERVO_PIN 3
-Servo servo; 
+Servo servo;
+
 
 
 #define BUTTON_UP   16
@@ -27,10 +29,7 @@ Pushbutton button_down(BUTTON_DOWN);
 
 
 RTC_DS1307 rtc;
-String daysOfTheMonth[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec"};
-
-
-
+String daysOfTheMonth[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 #define __CS 8
 #define __DC 9
@@ -115,32 +114,7 @@ void stripRGB(int colors[NUM_ROWS][3]){
       Serial.println("}");
 }
 
-//    Serial.print("{");
-//    for (int j = 0; j<3; j++){
-//      Serial.print("{");
-//      Serial.print(colorstate.colors[i][j][0]);
-//      Serial.print(", ");
-//      Serial.print(colorstate.colors[i][j][1]);
-//      Serial.print(", ");
-//      Serial.print(colorstate.colors[i][j][2]);
-//      Serial.print("}, ");
-//    }
-//    Serial.println("}");
 
-void stripHSVRow(int h, int s, int v, int row) {
-  int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
-  int last_led_in_row  = NUM_LEDS / NUM_ROWS * (row + 1);
-  for (int x = first_led_in_row; x < last_led_in_row; x++) {
-    leds[x] = CHSV(h, s, v);
-  }
-  FastLED.show();
-}
-
-void stripHSV(int colors[NUM_ROWS][3]){
-  for (int row; row < NUM_ROWS; row++){
-    stripHSVRow(colors[row][0], colors[row][1], colors[row][2], row);
-  }
-}
 
 
 
@@ -251,8 +225,14 @@ void displayTime() {
 }
 
 void drawSun() {
+  tft.fillScreen();
   tft.fillCircle(64, 64, 62, sunYellow);
   bgColor = sunYellow;
+}
+
+void drawMoon( uint8_t moon_phase){
+  tft.fillCircle(64, 64, 62, WHITE);
+  tft.fillCircle(2, 64, 87, BLACK);
 }
 
 void printMenuTitle(String titleString) {
@@ -292,12 +272,27 @@ uint16_t currentTimeInMinutes(){
    return rtc.now().hour() * 60 + rtc.now().minute();
 }
 
+void updateScreen(bool daytime, uint8_t moon_phase){
+  Serial.println(daytime);
+  if (daytime){
+    drawSun();
+  }else{
+    drawMoon(moon_phase);
+  }
+}
+
 
 void updateColorDisplay(){
   calculateDayParams ();
   colorstate.transitionTimes(sunrise_minute, sunset_minute);
   colorstate.updateColors(currentTimeInMinutes());
-  stripRGB(colorstate.current_colors);
+  updateScreen(colorstate.daytime, moon_phase);
+  servo.attach(SERVO_PIN);
+  servo.writeMicroseconds(colorstate.current_angle * 9.5 + 600); 
+  delay(500);
+  servo.detach();
+  
+  
   
 
 }
@@ -305,18 +300,21 @@ void updateColorDisplay(){
 void fastDayCycle() {
   calculateDayParams ();
   colorstate.transitionTimes(sunrise_minute, sunset_minute);
-//  servo.attach(SERVO_PIN);
-  uint8_t servo_last_pos;
-  for(uint16_t current_time_in_minutes = 1; current_time_in_minutes <1440; current_time_in_minutes =current_time_in_minutes+1){
+  int colorex[3][3] = {{255,255,255},{255,255,255},{255,255,255}};
+  stripRGB(colorex);
+  servo.attach(SERVO_PIN);
+  uint16_t servo_pos;
+  for(uint16_t current_time_in_minutes = 1; current_time_in_minutes <1440; current_time_in_minutes =current_time_in_minutes+5){
     colorstate.updateColors(current_time_in_minutes);
+    updateScreen(colorstate.daytime, moon_phase);
+    servo.detach();
+    
     stripRGB(colorstate.current_colors);
-//    if(colorstate.current_angle != servo_last_pos){
-//      
-//      Serial.println(colorstate.current_angle);
-//      servo.write(colorstate.current_angle); 
-//      servo_last_pos = colorstate.current_angle;
-//    }
-    delay(15);
+    servo.attach(SERVO_PIN);
+    servo_pos = colorstate.current_angle * 9.5 + 600;
+    servo.writeMicroseconds(servo_pos); 
+
+    delay(28);
     
     
     
@@ -339,12 +337,12 @@ void loop()
   }
 
   if (button_down.getSingleDebouncedPress()) {
-    fastDayCycle();
+    //fastDayCycle();
     updateColorDisplay();
   }
 
+  updateColorDisplay();
+  delay(60000);
 
-
-
-}
+;}
 

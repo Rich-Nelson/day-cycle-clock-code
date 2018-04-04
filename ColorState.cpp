@@ -7,22 +7,22 @@ ColorState::ColorState(bool debug_print){
 
 bool ColorState::transitionTimes(int16_t sunrise_minute,
                                  int16_t sunset_minute){
-  transition_time[night_end] = sunrise_minute - rise_set_duration / 2;
+  transition_time[night_end] = sunrise_minute - rise_set_duration / 4;
   transition_time[rise_peak] = sunrise_minute;
-  transition_time[day_start] = sunrise_minute + rise_set_duration / 2;
+  transition_time[day_start] = sunrise_minute + rise_set_duration / 1.25;
   transition_time[day_mid] = sunrise_minute + (sunset_minute - sunrise_minute)/2;
-  transition_time[day_end] = sunset_minute - rise_set_duration / 2;
+  transition_time[day_end] = sunset_minute - rise_set_duration / 1.25;
   transition_time[set_peak] = sunset_minute;
-  transition_time[night_start] = sunset_minute + rise_set_duration / 2;
+  transition_time[night_start] = sunset_minute + rise_set_duration / 4;
   transition_time[night_mid] = 1440; //sunset_minute + (sunrise_minute + 1440 - sunset_minute)/2;
 
 
 
-  // for (int8_t i = 0; i < number_of_transition_times; i++){
-  //   Serial.print(i);
-  //   Serial.print(" ");
-  //   Serial.println(transition_time[i]);
-  // }
+  for (int8_t i = 0; i < number_of_transition_times; i++){
+    Serial.print(i);
+    Serial.print(" ");
+    Serial.println(transition_time[i]);
+  }
 
 
 
@@ -62,12 +62,14 @@ int8_t ColorState::nextTransition(int16_t current_time_in_minutes){
 
 int ColorState::currentColors(int16_t current_time_in_minutes){
     int next_transition =  nextTransition(current_time_in_minutes);
-    // Serial.print("Current Time: ");
-    // Serial.println(current_time_in_minutes);
-    // Serial.print("Prev Transition Time: ");
-    // Serial.println(prev_transition_time);
-    // Serial.print("Next Transition Time: ");
-    // Serial.println(next_transition_time);
+    Serial.print("Current Time: ");
+    Serial.println(current_time_in_minutes);
+    Serial.print("Prev Transition Time: ");
+    Serial.println(prev_transition_time);
+    Serial.print("Next Transition Time: ");
+    Serial.println(next_transition_time);
+    Serial.print("next_transition: ");
+    Serial.println(next_transition);
     int16_t time_since_last_transition = current_time_in_minutes - prev_transition_time;
     // Serial.print("Time since last: ");
     // Serial.println(time_since_last_transition);
@@ -102,6 +104,7 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
 }
 
 uint8_t ColorState::currentAngle(int16_t current_time_in_minutes){
+  Serial.println(next_transition);
   if (next_transition >= rise_peak &&  next_transition <= night_start){
     current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)*(current_time_in_minutes - transition_time[night_end])/(transition_time[night_start] - transition_time[night_end]));
     // Serial.print("SUN Angle: ");
