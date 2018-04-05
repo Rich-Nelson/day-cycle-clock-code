@@ -35,7 +35,8 @@ String daysOfTheMonth[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"
 #define __DC 9
 #define __A0 10
 TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
-
+uint8_t tft_width = 128;
+uint8_t tft_height = 128;
 
 
 #define NUM_LEDS 45
@@ -73,6 +74,9 @@ int8_t time_zone = -5;
 uint16_t sunrise_minute;
 uint16_t sunset_minute;
 uint8_t moon_phase;
+
+#define UPDATE_INTERVAL 60000
+long last_update = millis() - UPDATE_INTERVAL;
 
 void setup()
 {
@@ -230,9 +234,67 @@ void drawSun() {
   bgColor = sunYellow;
 }
 
+
+void fillArc(int16_t x0, int16_t y0, int16_t r, bool side, int8_t lum, int16_t color){
+  int16_t y;
+  int16_t width = r*lum/100;
+
+  for(int16_t x = x0; x < x0+width; x++ ){
+    y = sqrt(sq(r)-sq((x-x0)*100/lum));
+//    Serial.print("x: ");
+//     Serial.print(x);
+//     Serial.print(" y: ");
+//     Serial.print(y);
+//     Serial.print(" h: ");
+//     Serial.println(y*2);
+     if(side == 0){
+        tft.drawFastVLine(2*x0-x, y0-y, y*2, color);
+     }
+     if(side == 1){
+          tft.drawFastVLine(x, y0-y, y*2, color);
+     }
+  }
+//  Serial.print("lum: ");
+//  Serial.print(lum);
+
+}
+
+
+
 void drawMoon( uint8_t moon_phase){
-  tft.fillCircle(64, 64, 62, WHITE);
-  tft.fillCircle(2, 64, 87, BLACK);
+  tft.fillScreen();
+  uint8_t phase_buffer =0;
+  if (moon_phase >= 100 - phase_buffer || moon_phase <= 0 + phase_buffer) { // New Moon
+    Serial.println("New Moon");
+  }else if (moon_phase >= 75 - phase_buffer && moon_phase <= 75 + phase_buffer){ //Third Quarter
+    Serial.println("Third Quarter");
+    fillArc(tft_width/2, tft_height/2, 62, 0, 100, WHITE);
+  }else if (moon_phase >= 50 - phase_buffer && moon_phase <= 50 + phase_buffer){ //Full Moon
+    Serial.println("Full Moon");
+    fillArc(tft_width/2, tft_height/2, 62, 0, 100, WHITE);
+    fillArc(tft_width/2, tft_height/2, 62, 1, 100, WHITE);
+  }else if (moon_phase >= 25 - phase_buffer && moon_phase <= 25 + phase_buffer){ //First Quarter
+    Serial.println("First Quarter");
+    fillArc(tft_width/2, tft_height/2, 62, 1, 100, WHITE);
+  }else if (moon_phase > 50 + phase_buffer && moon_phase < 75 - phase_buffer){ //Waning Gibbous
+    Serial.println("Waning Gibbous");
+    fillArc(tft_width/2, tft_height/2, 62, 0, 100, WHITE);
+    fillArc(tft_width/2, tft_height/2, 62, 1, 100-(moon_phase-50)*100/25, WHITE);
+  }else if (moon_phase > 75 + phase_buffer && moon_phase < 100 - phase_buffer){ //Waning Crescent
+    Serial.println("Waning Crescent");
+    fillArc(tft_width/2, tft_height/2, 62, 0, 100, WHITE);
+    fillArc(tft_width/2, tft_height/2, 62, 0, (moon_phase-75)*100/25, BLACK);    
+  }else if (moon_phase > 0 + phase_buffer && moon_phase < 25 - phase_buffer){ //Waxing Crescent
+    Serial.println("Waxing Crescent");
+    fillArc(tft_width/2, tft_height/2, 62, 1, 100, WHITE);
+    fillArc(tft_width/2, tft_height/2, 62, 1, 100-moon_phase*100/25, BLACK); 
+  }else if (moon_phase > 25 + phase_buffer && moon_phase < 50 - phase_buffer){ //Waxing Crescent
+    Serial.println("Waxing Gibbous");
+    fillArc(tft_width/2, tft_height/2, 62, 0, (moon_phase-25)*100/25, WHITE);
+    fillArc(tft_width/2, tft_height/2, 62, 1, 100, WHITE);
+  }
+  Serial.print("Moon Phase: ");
+  Serial.println(moon_phase);
 }
 
 void printMenuTitle(String titleString) {
@@ -339,10 +401,16 @@ void loop()
   if (button_down.getSingleDebouncedPress()) {
     //fastDayCycle();
     updateColorDisplay();
+//    for(uint8_t phase = 0; phase <= 100; phase++){
+//      drawMoon(phase);
+//      delay(500);
+//    }
   }
 
+if( millis() > last_update + UPDATE_INTERVAL){
   updateColorDisplay();
-  delay(60000);
+  last_update = millis();
+}
 
 ;}
 
