@@ -7,21 +7,23 @@ ColorState::ColorState(bool debug_print){
 
 bool ColorState::transitionTimes(int16_t sunrise_minute,
                                  int16_t sunset_minute){
-  transition_time[night_end] = sunrise_minute - rise_set_duration / 4;
-  transition_time[rise_peak] = sunrise_minute;
-  transition_time[day_start] = sunrise_minute + rise_set_duration / 1.25;
-  transition_time[day_mid] = sunrise_minute + (sunset_minute - sunrise_minute)/2;
-  transition_time[day_end] = sunset_minute - rise_set_duration / 1.25;
-  transition_time[set_peak] = sunset_minute;
-  transition_time[night_start] = sunset_minute + rise_set_duration / 4;
-  transition_time[night_mid] = 1440; //sunset_minute + (sunrise_minute + 1440 - sunset_minute)/2;
+  transition_time[NIGHT_END] = sunrise_minute - rise_set_duration / 3;
+  transition_time[RISE_PEAK] = sunrise_minute;
+  transition_time[DAY_START] = sunrise_minute + rise_set_duration / 1.25;
+  transition_time[DAY_MID] = sunrise_minute + (sunset_minute - sunrise_minute)/2;
+  transition_time[DAY_END] = sunset_minute - rise_set_duration / 1.25;
+  transition_time[SET_PEAK] = sunset_minute;
+  transition_time[NIGHT_START] = sunset_minute + rise_set_duration / 3;
+  transition_time[NIGHT_MID] = 1440; //sunset_minute + (sunrise_minute + 1440 - sunset_minute)/2;
 
 
 
   for (int8_t i = 0; i < number_of_transition_times; i++){
-    Serial.print(i);
-    Serial.print(" ");
-    Serial.println(transition_time[i]);
+    #ifdef DEBUG
+      Serial.print(i);
+      Serial.print(" ");
+      Serial.println(transition_time[i]);
+    #endif
   }
 
 
@@ -34,13 +36,13 @@ int8_t ColorState::nextTransition(int16_t current_time_in_minutes){
 
     for(int8_t i = 0; i < number_of_transition_times; i++){
 
-      if (i == night_end){
+      if (i == NIGHT_END){
         prev_transition_time = 0;
       } else {
         prev_transition_time = transition_time[i-1];
       }
 
-      if (i == night_mid){
+      if (i == NIGHT_MID){
         next_transition_time = 1440;
       } else {
         next_transition_time = transition_time[i];
@@ -62,17 +64,21 @@ int8_t ColorState::nextTransition(int16_t current_time_in_minutes){
 
 int ColorState::currentColors(int16_t current_time_in_minutes){
     int next_transition =  nextTransition(current_time_in_minutes);
-    Serial.print("Current Time: ");
-    Serial.println(current_time_in_minutes);
-    Serial.print("Prev Transition Time: ");
-    Serial.println(prev_transition_time);
-    Serial.print("Next Transition Time: ");
-    Serial.println(next_transition_time);
-    Serial.print("next_transition: ");
-    Serial.println(next_transition);
+    #ifdef DEBUG
+      Serial.print("Current Time: ");
+      Serial.println(current_time_in_minutes);
+      Serial.print("Prev Transition Time: ");
+      Serial.println(prev_transition_time);
+      Serial.print("Next Transition Time: ");
+      Serial.println(next_transition_time);
+      Serial.print("next_transition: ");
+      Serial.println(next_transition);
+    #endif
     int16_t time_since_last_transition = current_time_in_minutes - prev_transition_time;
-    // Serial.print("Time since last: ");
-    // Serial.println(time_since_last_transition);
+    #ifdef DEBUG
+      Serial.print("Time since last: ");
+      Serial.println(time_since_last_transition);
+    #endif
     int8_t transition_progress = 100* time_since_last_transition / (next_transition_time - prev_transition_time);//(time_since_last_transition / (next_transition_time - prev_transition_time))*100;
     // Serial.print("Transition Progress: ");
     // Serial.println(transition_progress);
@@ -105,16 +111,16 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
 
 uint8_t ColorState::currentAngle(int16_t current_time_in_minutes){
   Serial.println(next_transition);
-  if (next_transition >= rise_peak &&  next_transition <= night_start){
-    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)*(current_time_in_minutes - transition_time[night_end])/(transition_time[night_start] - transition_time[night_end]));
+  if (next_transition >= RISE_PEAK &&  next_transition <= NIGHT_START){
+    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)*(current_time_in_minutes - transition_time[NIGHT_END])/(transition_time[NIGHT_START] - transition_time[NIGHT_END]));
     // Serial.print("SUN Angle: ");
     daytime = 1;
-  } else if (next_transition == night_mid){
-    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon) - (western_horizon - eastern_horizon)/2*(current_time_in_minutes - transition_time[night_start])/(transition_time[night_mid] - transition_time[night_start]));
+  } else if (next_transition == NIGHT_MID){
+    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon) - (western_horizon - eastern_horizon)/2*(current_time_in_minutes - transition_time[NIGHT_START])/(transition_time[NIGHT_MID] - transition_time[NIGHT_START]));
     // Serial.print("MOON Rising: ");
     daytime = 0;
-  } else if (next_transition == night_end){
-    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)/2 - (western_horizon - eastern_horizon)/2*(current_time_in_minutes)/(transition_time[night_end]));
+  } else if (next_transition == NIGHT_END){
+    current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)/2 - (western_horizon - eastern_horizon)/2*(current_time_in_minutes)/(transition_time[NIGHT_END]));
     // Serial.print("MOON Setting: ");
     daytime = 0;
   }

@@ -7,17 +7,18 @@
   #include "WProgram.h"
 #endif
 
-
-#define night_end 0
-#define rise_peak 1
-#define day_start 2
-#define day_mid 3
-#define day_end 4
-#define set_peak 5
-#define night_start 6
-#define night_mid 7
+enum DayTransitions {NIGHT_END,
+                      RISE_PEAK,
+                      DAY_START,
+                      DAY_MID,
+                      DAY_END,
+                      SET_PEAK,
+                      NIGHT_START,
+                      NIGHT_MID};
 
 #define number_of_transition_times 8
+
+// #define DEBUG
 
 #define eastern_horizon 0
 #define western_horizon 170
@@ -38,6 +39,7 @@ class ColorState {
     int currentColors(int16_t);
     uint8_t currentAngle(int16_t);
     //variables
+    int16_t transition_time[number_of_transition_times] = {};
     int8_t next_transition;
     int8_t prev_transition;
     uint8_t current_angle;
@@ -55,7 +57,7 @@ class ColorState {
                           };
 
   private:
-    int16_t transition_time[number_of_transition_times] = {};
+
     bool _debug_print;
     int16_t prev_transition_time;
     int16_t next_transition_time;
