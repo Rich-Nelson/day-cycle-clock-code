@@ -29,6 +29,7 @@ class ColorState {
   public:
     // Constructor
     ColorState(bool debug_print);
+    
     // Configuration
     bool transitionTimes(int16_t sunrise_minute,
                          int16_t sunset_minute);
@@ -38,6 +39,7 @@ class ColorState {
     int8_t nextTransition(int16_t);
     int currentColors(int16_t);
     uint8_t currentAngle(int16_t);
+
     //variables
     int16_t transition_time[number_of_transition_times] = {};
     int8_t next_transition;
@@ -61,8 +63,6 @@ class ColorState {
     bool _debug_print;
     int16_t prev_transition_time;
     int16_t next_transition_time;
-    // int16_t next_transition_time;
-    // int16_t ;
 };
 
 #endif

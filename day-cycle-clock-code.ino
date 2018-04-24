@@ -4,17 +4,15 @@
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
 #include <TimeLord.h>
-#include <Servo.h>
-#include "FastLED.h"
 #include "ColorState.h"
+#include "DisplayOutput.h"
 
-#define DEBUG
+//#define DEBUG
 
 ColorState colorstate(false);
+DisplayOutput displayoutput;
 
 
-#define SERVO_PIN 3
-Servo servo;
 
 
 #define BUTTON_UP   16
@@ -37,16 +35,12 @@ uint8_t tft_width = 128;
 uint8_t tft_height = 128;
 
 
-#define NUM_LEDS 45
-#define NUM_ROWS 3
-#define LED_PIN 6
-#define LED_TYPE    WS2812B
-#define COLOR_ORDER GRB
 
 
-CRGB leds[NUM_LEDS];
 
 
+
+//Colors in RGB565
 #define BLACK   0x0000
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
@@ -68,6 +62,7 @@ uint16_t sunset_minute;
 uint8_t moon_phase_precentage;
 uint8_t moon_phase;
 uint8_t phase_buffer = 2;
+const bool MOON_SHADOW = 1;
 
 enum MoonPhases {
                 NEW_MOON,
@@ -88,50 +83,14 @@ void setup()
   Serial.begin(115200);
   tft.begin();
   rtc.begin();
-  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 
   tardis.TimeZone(time_zone * 60);
   tardis.Position(latitude, longitude);
-  
+
 //  tardis.DstRules(3,2,11,1, 60);
 
   drawSun();
 }
-
-
-
-void stripRGBRow(int r, int g, int b, int row) {
-  int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
-  int last_led_in_row  = NUM_LEDS / NUM_ROWS * (row + 1);
-  for (int x = first_led_in_row; x <  last_led_in_row; x++) {
-    leds[x] = CRGB(r, g, b);
-  }
-  FastLED.show();
-}
-
-void stripRGB(int colors[NUM_ROWS][3]){
-    #ifdef DEBUG
-      Serial.print("{");
-    #endif
-  for (int row; row < NUM_ROWS; row++){
-    #ifdef DEBUG
-      Serial.print("{");
-      Serial.print(colors[row][0]);
-      Serial.print(", ");
-      Serial.print(colors[row][1]);
-      Serial.print(", ");
-      Serial.print(colors[row][2]);
-      Serial.print("}, ");
-    #endif
-    stripRGBRow(colors[row][0], colors[row][1], colors[row][2], row);
-  }
-      
-      #ifdef DEBUG
-        Serial.println("}");
-      #endif
-}
-
-
 
 
 
@@ -170,13 +129,6 @@ int selectValue(String title, int value, int val_min, int val_max) {
   return value;
 }
 
-void servoMoveTo(uint8_t degree, uint16_t s_delay){
-  servo.attach(SERVO_PIN);
-  servo.writeMicroseconds(degree * 9.5 + 600); 
-  delay(s_delay);
-  servo.detach();
-}
-
 void settingsMenu() {
   drawSun();
   int8_t new_month = selectValue("Mnth", rtc.now().month(), 1, 12);
@@ -190,6 +142,29 @@ void settingsMenu() {
   tardis.Position(latitude, longitude);
 
 }
+
+void calculateDayParams () {
+  tardis.Position(latitude, longitude);
+  byte sunrise[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
+  tardis.SunRise(sunrise);
+  sunrise_minute = (sunrise[tl_hour] * 60) + sunrise[tl_minute];
+  byte sunset[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
+  tardis.SunSet(sunset);
+  sunset_minute = (sunset[tl_hour] * 60) + sunset[tl_minute];
+  byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
+  moon_phase_precentage = tardis.MoonPhase(phase_today) * 100;
+
+}
+
+uint16_t currentTimeInMinutes(){
+   return rtc.now().hour() * 60 + rtc.now().minute();
+}
+
+
+
+
+
+
 
 
 void printTime(int time_hour, int time_min) {
@@ -214,19 +189,6 @@ void printDate() {
   tft.println(now.day(), DEC);
   tft.setCursor(28, 72);
   tft.print(now.year(), DEC);
-}
-
-void calculateDayParams () {
-  tardis.Position(latitude, longitude);
-  byte sunrise[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
-  tardis.SunRise(sunrise);
-  sunrise_minute = (sunrise[tl_hour] * 60) + sunrise[tl_minute];
-  byte sunset[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
-  tardis.SunSet(sunset);
-  sunset_minute = (sunset[tl_hour] * 60) + sunset[tl_minute];
-  byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
-  moon_phase_precentage = tardis.MoonPhase(phase_today) * 100;
-
 }
 
 void displayTime() {
@@ -270,7 +232,7 @@ void fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_t percent_trans
      Serial.print(r2);
      Serial.print(" x02: ");
      Serial.println(x02);
-     
+
   #endif
   if(x0+width < tft_width && x0+width > 0){
 
@@ -307,7 +269,7 @@ void fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_t percent_trans
         }
       }
     }
-      
+
   }
 }
 
@@ -316,7 +278,7 @@ void updateMoon( uint8_t moon_phase_precentage){
   uint8_t quot = moon_phase_precentage / 25;
   uint8_t rem = moon_phase_precentage % 25;
   int8_t moon_progress;
-  
+
   if (rem <= phase_buffer){
     moon_phase = quot * 2;
   }else if( rem < 25 - phase_buffer){
@@ -324,14 +286,10 @@ void updateMoon( uint8_t moon_phase_precentage){
   }else{
     moon_phase = quot * 2 + 2;
   }
-    
-  tft.fillScreen();
 
-  if (moon_phase_precentage % 50 > phase_buffer*2 && moon_phase_precentage % 50 < 50 - phase_buffer*2){
-      #ifdef DEBUG
-    Serial.print("Moon Phase Percentage % 50: ");
-    Serial.println(moon_phase_precentage % 50);
-  #endif
+  tft.fillScreen();
+  //Draw Moon shadow gradient
+  if (MOON_SHADOW && moon_phase_precentage % 50 > phase_buffer*2 && moon_phase_precentage % 50 < 50 - phase_buffer*2){
     if (moon_phase <= FULL_MOON){
       moon_progress = -1;
     }else{
@@ -339,23 +297,22 @@ void updateMoon( uint8_t moon_phase_precentage){
     }
       drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(9*moon_progress), 0x4208);
       drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(6*moon_progress), 0x8410);
-      drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(3*moon_progress), 0xC638);
-      delay(500);
+      drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(3*moon_progress), 0xDEDB);
   }
   drawMoon(moon_phase, moon_phase_precentage, tft_width/2, WHITE);
 }
 
 void drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage, int16_t x0, int16_t color){
 
-  
+
   uint8_t percent_transition;
-  
+
 
   #ifdef DEBUG
     Serial.print("Moon Phase Test: ");
     Serial.println(moon_phase);
   #endif
-  
+
   switch (moon_phase) {
     case NEW_MOON:
 
@@ -396,8 +353,6 @@ void drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage, int16_t x0, in
   #endif
 }
 
-
-
 void printMenuTitle(String titleString) {
   fillMenuTitle();
   int x_offset = (4 - titleString.length()) * 8;
@@ -431,10 +386,6 @@ void fillValue() {
   tft.fillRect(7, 48, 118, 30, bgColor);
 }
 
-uint16_t currentTimeInMinutes(){
-   return rtc.now().hour() * 60 + rtc.now().minute();
-}
-
 void updateScreen(bool daytime, uint8_t moon_phase_precentage){
   #ifdef DEBUG
     Serial.println(daytime);
@@ -451,54 +402,53 @@ void updateColorDisplay(){
   calculateDayParams ();
   colorstate.transitionTimes(sunrise_minute, sunset_minute);
   colorstate.updateColors(currentTimeInMinutes());
+  displayoutput.stripRGB(colorstate.current_colors);
+  displayoutput.servoMoveTo(colorstate.current_angle, 500);
   updateScreen(colorstate.daytime, moon_phase_precentage);
-  stripRGB(colorstate.current_colors); 
-  servoMoveTo(colorstate.current_angle, 500);
 }
 
 void fastDayCycle() {
   calculateDayParams ();
   colorstate.transitionTimes(sunrise_minute, sunset_minute);
   int colorex[3][3] = {{255,255,255},{255,255,255},{255,255,255}};
-  stripRGB(colorex);
-  servo.attach(SERVO_PIN);
+  displayoutput.stripRGB(colorex);
   uint16_t servo_pos;
   int8_t last_transition;
-  for(uint16_t current_time_in_minutes = colorstate.transition_time[NIGHT_END]; current_time_in_minutes < colorstate.transition_time[NIGHT_MID]; current_time_in_minutes =current_time_in_minutes+5){
+  displayoutput.servoAttach();
+  for(uint16_t current_time_in_minutes = colorstate.transition_time[NIGHT_END]; current_time_in_minutes < colorstate.transition_time[NIGHT_MID]; current_time_in_minutes = current_time_in_minutes+5){
     colorstate.updateColors(current_time_in_minutes);
 
     if(last_transition != colorstate.next_transition && (colorstate.next_transition == RISE_PEAK || colorstate.next_transition == NIGHT_MID)){
           updateScreen(colorstate.daytime, moon_phase_precentage);
     }
 
-    servo.detach();
     
-    stripRGB(colorstate.current_colors);
-    servo.attach(SERVO_PIN);
-    servo_pos = colorstate.current_angle * 9.5 + 600;
-    servo.writeMicroseconds(servo_pos); 
-
-    delay(28);
+    displayoutput.servoDetach();
+    displayoutput.stripRGB(colorstate.current_colors);
+    
+    displayoutput.servoMoveTo(colorstate.current_angle, 28);
+    displayoutput.servoAttach();
+//    delay(28);
     last_transition = colorstate.next_transition;
   }
-  for(uint16_t current_time_in_minutes = 1; current_time_in_minutes < colorstate.transition_time[NIGHT_END]; current_time_in_minutes =current_time_in_minutes+5){
+  for(uint16_t current_time_in_minutes = 1; current_time_in_minutes < colorstate.transition_time[NIGHT_END]; current_time_in_minutes = current_time_in_minutes+5){
     colorstate.updateColors(current_time_in_minutes);
 
     if(last_transition != colorstate.next_transition && (colorstate.next_transition == RISE_PEAK || colorstate.next_transition == NIGHT_MID)){
           updateScreen(colorstate.daytime, moon_phase_precentage);
     }
 
-    servo.detach();
-    
-    stripRGB(colorstate.current_colors);
-    servo.attach(SERVO_PIN);
-    servo_pos = colorstate.current_angle * 9.5 + 600;
-    servo.writeMicroseconds(servo_pos); 
 
-    delay(28);
+    displayoutput.servoDetach();
+    displayoutput.stripRGB(colorstate.current_colors);
+    
+    displayoutput.servoMoveTo(colorstate.current_angle, 28);
+    displayoutput.servoAttach();
+
+//    delay(28);
     last_transition = colorstate.next_transition;
   }
-  servo.detach();
+  displayoutput.servoDetach();
 }
 
 void fastMoonCycle() {
@@ -511,7 +461,8 @@ void loop()
 {
   //Settings Menu
   if (button_left.getSingleDebouncedPress()) {
-    servoMoveTo(90, 500);
+    
+    displayoutput.servoMoveTo(90, 500);
     settingsMenu();
     updateColorDisplay();
   }
@@ -522,8 +473,8 @@ void loop()
   }
 
   if (button_down.getSingleDebouncedPress()) {
-//    fastDayCycle();
-    fastMoonCycle();
+    fastDayCycle();
+//    fastMoonCycle();
     updateColorDisplay();
 
   }
@@ -534,4 +485,3 @@ if( millis() > last_update + UPDATE_INTERVAL){
 }
 
 ;}
-
