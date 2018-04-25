@@ -83,6 +83,7 @@ void setup()
   Serial.begin(115200);
   tft.begin();
   rtc.begin();
+  displayoutput.begin();
 
   tardis.TimeZone(time_zone * 60);
   tardis.Position(latitude, longitude);

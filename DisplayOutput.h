@@ -9,6 +9,9 @@
 
 #include <Servo.h>
 #include "FastLED.h"
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <TFT_ILI9163C.h>
 
 #define SERVO_PIN    3
 
@@ -18,7 +21,9 @@
 #define LED_TYPE     WS2812B
 #define COLOR_ORDER  GRB
 
-
+#define __CS 8
+#define __DC 9
+#define __A0 10
 
 class DisplayOutput {
   public:
@@ -26,7 +31,8 @@ class DisplayOutput {
     DisplayOutput();
     Servo servo;
     CRGB leds[NUM_LEDS];
-
+    TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
+    void begin();
     // Configuration
 
 

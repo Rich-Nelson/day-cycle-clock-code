@@ -4,6 +4,13 @@ DisplayOutput::DisplayOutput(){
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 }
 
+void DisplayOutput::begin(){
+  tft.begin();
+  tft.fillScreen();
+  tft.fillCircle(64, 64, 62, 0xFFFF);
+  delay(5000);
+}
+
 void DisplayOutput::servoMoveTo(uint8_t degree, uint16_t s_delay){
   servo.attach(SERVO_PIN);
 //  servo.writeMicroseconds(degree * 9.5 + 600);
@@ -19,7 +26,6 @@ void DisplayOutput::servoAttach(){
 void DisplayOutput::servoDetach(){
   servo.attach(SERVO_PIN);
 }
-
 
 void DisplayOutput::stripRGBRow(int r, int g, int b, int row) {
   int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
