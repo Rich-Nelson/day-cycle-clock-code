@@ -25,6 +25,22 @@
 #define __DC 9
 #define __A0 10
 
+#define BLACK   0x0000
+#define YELLOW  0xFFE0
+#define WHITE   0xFFFF
+
+enum MoonPhases {
+            NEW_MOON,
+            WAXING_CRESCENT,
+            FIRST_QUARTER,
+            WAXING_GIBBOUS,
+            FULL_MOON,
+            WANING_GIBBOUS,
+            THIRD_QUARTER,
+            WANING_CRESCENT
+            };
+
+
 class DisplayOutput {
   public:
     // Constructor
@@ -47,10 +63,22 @@ class DisplayOutput {
     void fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_t percent_transition, uint8_t phase, int16_t color);
     void updateMoon( uint8_t moon_phase_precentage);
     void drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage, int16_t x0, int16_t color);
+    void printMenuTitle(String titleString);
+    void printTime(int time_hour, int time_min);
+    void printDate(uint8_t month, uint8_t day, uint16_t year);
+    void printValue(int value);
+    void fillMenuTitle();
+    void fillValue();
     //variables
 
 
   private:
+    String daysOfTheMonth[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    uint8_t moon_phase;
+    uint8_t phase_buffer = 2;
+    const bool MOON_SHADOW = 1;
+    uint8_t tft_width = 128;
+    uint8_t tft_height = 128;
 
 
 };
