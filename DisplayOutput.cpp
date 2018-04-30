@@ -219,14 +219,59 @@ void DisplayOutput::printMenuTitle(String titleString) {
   tft.print(titleString);
 }
 
+bool DisplayOutput::amCheck(int time_hour){
+  if( time_hour < 12){
+    return true;
+  }else{
+    return false;
+  }
+}
+
+int DisplayOutput::convert12Hr(int time_hour){
+  if (time_hour == 0){
+    return 12;
+  }else if( time_hour > 12){
+    return time_hour - 12;
+  }else{
+    return time_hour;
+  }
+
+}
+
+void DisplayOutput::printAMPM(bool AM){
+  fillAMPM();
+
+  tft.setCursor(48, 84);
+  tft.setTextColor(BLACK);
+  tft.setTextSize(3);
+  if(AM){
+    tft.print("AM");
+  }else{
+    tft.print("PM");
+  }
+}
+
 void DisplayOutput::printTime(int time_hour, int time_min) {
+  bool AM = amCheck(time_hour);
+  time_hour = convert12Hr(time_hour);
+  printAMPM(AM);
+
   fillValue();
   tft.setCursor(7, 48);
   tft.setTextColor(BLACK);
   tft.setTextSize(4);
+  if(time_hour < 10){
+    tft.print(0, DEC);
+  }
   tft.print(time_hour, DEC);
   tft.print(':');
+  if(time_min < 10){
+    tft.print(0, DEC);
+  }
   tft.println(time_min, DEC);
+
+
+
 }
 
 void DisplayOutput::printDate(uint8_t month, uint8_t day, uint16_t year) {
@@ -241,7 +286,14 @@ void DisplayOutput::printDate(uint8_t month, uint8_t day, uint16_t year) {
   tft.print(year, DEC);
 }
 
-void DisplayOutput::printValue(int value) {
+void DisplayOutput::printValue(int value, bool hr = 0) {
+
+  if(hr){
+    bool AM = amCheck(value);
+    value = convert12Hr(value);
+    printAMPM(AM);
+  }
+
   int val_length = String(value).length();
   int cursor_x;
   tft.setTextColor(BLACK);
@@ -255,6 +307,9 @@ void DisplayOutput::printValue(int value) {
   fillValue();
   tft.setCursor(cursor_x, 48);
   tft.print(value);
+
+
+
 }
 
 void DisplayOutput::fillMenuTitle() {
@@ -263,4 +318,12 @@ void DisplayOutput::fillMenuTitle() {
 
 void DisplayOutput::fillValue() {
   tft.fillRect(7, 48, 118, 30, YELLOW);
+}
+
+void DisplayOutput::fillAMPM() {
+  tft.fillRect(48, 80, 28, 24, YELLOW);
+}
+
+void DisplayOutput::fillCircle(uint16_t color) {
+  tft.fillCircle(tft_width/2, tft_height/2, tft_width/2-2, color);
 }

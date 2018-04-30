@@ -13,7 +13,7 @@
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
 
-#define DEBUG
+//#define DEBUG
 
 #define SERVO_PIN    3
 
@@ -67,11 +67,18 @@ class DisplayOutput {
     void updateMoon( uint8_t moon_phase_precentage);
     void drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage, int16_t x0, int16_t color);
     void printMenuTitle(String titleString);
+    bool amCheck(int time_hour);
+    int convert12Hr(int time_hour);
+    void printAMPM(bool AM);
     void printTime(int time_hour, int time_min);
     void printDate(uint8_t month, uint8_t day, uint16_t year);
-    void printValue(int value);
+    void printValue(int value, bool hr = false);
     void fillMenuTitle();
     void fillValue();
+    void fillAMPM();
+    void fillCircle(uint16_t color);
+
+
     //variables
 
 
