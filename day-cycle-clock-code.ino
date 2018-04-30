@@ -4,12 +4,10 @@
 #include "ColorState.h"
 #include "DisplayOutput.h"
 
-//#define DEBUG
+#define DEBUG
 
 ColorState colorstate(false);
 DisplayOutput displayoutput;
-
-
 
 
 #define BUTTON_UP   16
@@ -26,6 +24,7 @@ RTC_DS1307 rtc;
 TimeLord tardis;
 
 //Initial Settings
+//Note: consider storing these in persistant storage
 int8_t latitude = 40;
 int16_t longitude = -75;
 int8_t time_zone = -4; // non DSTint8_t time_zone = -5;
@@ -35,8 +34,20 @@ uint16_t sunrise_minute;
 uint16_t sunset_minute;
 uint8_t moon_phase_precentage;
 
+//Last time
 
-#define UPDATE_INTERVAL 60000
+uint32_t last_date_in_days;
+uint16_t last_time_in_minutes;
+int8_t last_latitude;
+int16_t last_longitude;
+bool last_daytime;
+uint8_t last_moon_phase_precentage;
+uint8_t last_servo_angle;
+
+#define FORCE 1
+
+
+#define UPDATE_INTERVAL 0
 long last_update = millis() - UPDATE_INTERVAL;
 
 void setup()
@@ -49,12 +60,12 @@ void setup()
   tardis.Position(latitude, longitude);
 
 //  tardis.DstRules(3,2,11,1, 60);
-
+  
 }
 
 
 
-/**
+/*
     Shows current name and value of a variabl on the screen
     Allow the value to be adjusted via buttons
     Returns the new value
@@ -89,11 +100,12 @@ int selectValue(String title, int value, int val_min, int val_max) {
   return value;
 }
 
+
 void settingsMenu() {
   displayoutput.drawSun();
   int8_t new_month = selectValue("Mnth", rtc.now().month(), 1, 12);
   int8_t new_day = selectValue("Day", rtc.now().day(), 1, 31);
-  int16_t new_year = selectValue("Year", rtc.now().year(), 2000, 2100);
+  int16_t new_year = selectValue("Year", rtc.now().year(), 1900, 2100);
   int8_t new_hour = selectValue("Hour", rtc.now().hour(), 0, 23);
   int8_t new_minute = selectValue("Min", rtc.now().minute(), 0, 59);
   rtc.adjust(DateTime(new_year, new_month, new_day, new_hour, new_minute, 30));
@@ -121,6 +133,10 @@ uint16_t currentTimeInMinutes(){
 }
 
 
+uint32_t currentDateinDays(){
+  //rough calc does not account for month lengths
+  return rtc.now().year() * 365 + rtc.now().month() * 30 + rtc.now().day();
+}
 
 void displayTime() {
   calculateDayParams ();
@@ -141,14 +157,9 @@ void displayTime() {
 //  delay(2000);
 }
 
-
-
-
-
-
-
 void updateScreen(bool daytime, uint8_t moon_phase_precentage){
   #ifdef DEBUG
+    Serial.print("Daytime: ");
     Serial.println(daytime);
   #endif
   if (daytime){
@@ -158,14 +169,53 @@ void updateScreen(bool daytime, uint8_t moon_phase_precentage){
   }
 }
 
+void updateColorDisplay(bool force_update = 0){
+  if (latitude != last_latitude || longitude != longitude || last_date_in_days != currentDateinDays() || force_update){
+    #ifdef DEBUG
+    Serial.println("Day Update");
+    #endif
+    calculateDayParams ();
+    colorstate.transitionTimes(sunrise_minute, sunset_minute);
+    
+    latitude = last_latitude;
+    longitude = longitude;
+    last_date_in_days = currentDateinDays();
+  }
 
-void updateColorDisplay(){
-  calculateDayParams ();
-  colorstate.transitionTimes(sunrise_minute, sunset_minute);
-  colorstate.updateColors(currentTimeInMinutes());
-  displayoutput.stripRGB(colorstate.current_colors);
-  displayoutput.servoMoveTo(colorstate.current_angle, 500);
-  updateScreen(colorstate.daytime, moon_phase_precentage);
+  if (last_time_in_minutes != currentTimeInMinutes() || force_update){
+    #ifdef DEBUG
+    Serial.print("Current Time in Minutes: ");
+    Serial.println(currentTimeInMinutes());
+    #endif
+    colorstate.updateColors(currentTimeInMinutes());
+    displayoutput.stripRGB(colorstate.current_colors);
+
+    if (colorstate.current_angle != last_servo_angle || force_update){
+      displayoutput.servoMoveTo(colorstate.current_angle, 500);
+      updateScreen(colorstate.daytime, moon_phase_precentage);
+
+      last_servo_angle = colorstate.current_angle;
+    }
+    
+    last_time_in_minutes = currentTimeInMinutes();
+  }
+
+//  if ( last_daytime != colorstate.daytime || last_moon_phase_precentage != moon_phase_precentage || force_update){
+//    #ifdef DEBUG
+//    Serial.println("Update Screen");
+//    #endif
+//    updateScreen(colorstate.daytime, moon_phase_precentage);
+//
+//    last_daytime = colorstate.daytime;
+//    last_moon_phase_precentage = moon_phase_precentage;
+//  }
+    
+  
+  
+  
+  
+  
+
 }
 
 void fastDayCycle() {
@@ -225,18 +275,18 @@ void loop()
     
     displayoutput.servoMoveTo(90, 500);
     settingsMenu();
-    updateColorDisplay();
+    updateColorDisplay(FORCE);
   }
   //Display Time, Date, SuneRise, Sunset
   if (button_up.getSingleDebouncedPress()) {
     displayTime();
-    updateColorDisplay();
+    updateColorDisplay(FORCE);
   }
 
   if (button_down.getSingleDebouncedPress()) {
     fastDayCycle();
 //    fastMoonCycle();
-    updateColorDisplay();
+    updateColorDisplay(FORCE);
 
   }
 

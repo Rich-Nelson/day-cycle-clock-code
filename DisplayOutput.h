@@ -13,6 +13,8 @@
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
 
+#define DEBUG
+
 #define SERVO_PIN    3
 
 #define NUM_LEDS     45
@@ -45,12 +47,13 @@ class DisplayOutput {
   public:
     // Constructor
     DisplayOutput();
+
+
+    // Configuration
     Servo servo;
     CRGB leds[NUM_LEDS];
     TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
     void begin();
-    // Configuration
-
 
     // Mehods
     void servoMoveTo(uint8_t degree, uint16_t s_delay);

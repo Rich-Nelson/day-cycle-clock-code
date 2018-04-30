@@ -79,25 +79,29 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
       Serial.print("Time since last: ");
       Serial.println(time_since_last_transition);
     #endif
-    int8_t transition_progress = 100* time_since_last_transition / (next_transition_time - prev_transition_time);//(time_since_last_transition / (next_transition_time - prev_transition_time))*100;
-    // Serial.print("Transition Progress: ");
-    // Serial.println(transition_progress);
-    // Serial.print("prev_transition: ");
-    // Serial.println(prev_transition);
-    // Serial.print("next_transition: ");
-    // Serial.println(next_transition);
+    uint8_t transition_progress = (float) 100* time_since_last_transition / (next_transition_time - prev_transition_time);//(time_since_last_transition / (next_transition_time - prev_transition_time))*100;
+    #ifdef DEBUG
+      Serial.print("Transition Progress: ");
+      Serial.println(transition_progress);
+      Serial.print("prev_transition: ");
+      Serial.println(prev_transition);
+      Serial.print("next_transition: ");
+      Serial.println(next_transition);
+    #endif
     for (int i=0; i < 3; i++){
       for (int j=0; j < 3; j++){
-        // Serial.print(i);
-        // Serial.println(j);
-        // Serial.print(colors[prev_transition][i][j]);
-        // Serial.print(" + ");
-        // Serial.print((float)transition_progress/100);
-        // Serial.print(" * (");
-        // Serial.print(colors[next_transition][i][j]);
-        // Serial.print(" - ");
-        // Serial.print(colors[prev_transition][i][j]);
-        // Serial.println(" )");
+        #ifdef DEBUG
+          Serial.print(i);
+          Serial.println(j);
+          Serial.print(colors[prev_transition][i][j]);
+          Serial.print(" + ");
+          Serial.print((float)transition_progress/100);
+          Serial.print(" * (");
+          Serial.print(colors[next_transition][i][j]);
+          Serial.print(" - ");
+          Serial.print(colors[prev_transition][i][j]);
+          Serial.println(" )");
+        #endif
         float float_color_value = (float)colors[prev_transition][i][j] + (colors[next_transition][i][j] - colors[prev_transition][i][j])*transition_progress/100;
         current_colors[i][j] = static_cast<int>(float_color_value);
         //******************************

@@ -7,6 +7,8 @@
   #include "WProgram.h"
 #endif
 
+// #define DEBUG
+
 enum DayTransitions {NIGHT_END,
                       RISE_PEAK,
                       DAY_START,
@@ -16,9 +18,8 @@ enum DayTransitions {NIGHT_END,
                       NIGHT_START,
                       NIGHT_MID};
 
-#define number_of_transition_times 8
 
-// #define DEBUG
+#define number_of_transition_times 8
 
 #define eastern_horizon 0
 #define western_horizon 170
@@ -29,7 +30,7 @@ class ColorState {
   public:
     // Constructor
     ColorState(bool debug_print);
-    
+
     // Configuration
     bool transitionTimes(int16_t sunrise_minute,
                          int16_t sunset_minute);

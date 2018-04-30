@@ -9,6 +9,10 @@ void DisplayOutput::begin(){
 }
 
 void DisplayOutput::servoMoveTo(uint8_t degree, uint16_t s_delay){
+  #ifdef DEBUG
+    Serial.print("Servo Move To: ");
+    Serial.println(degree);
+  #endif
   servo.attach(SERVO_PIN);
 //  servo.writeMicroseconds(degree * 9.5 + 600);
   servo.write(degree);
@@ -25,6 +29,15 @@ void DisplayOutput::servoDetach(){
 }
 
 void DisplayOutput::stripRGBRow(int r, int g, int b, int row) {
+  #ifdef DEBUG
+    Serial.print(r);
+    Serial.print(" , ");
+    Serial.print(g);
+    Serial.print(" , ");
+    Serial.print(b);
+    Serial.print(" , ");
+    Serial.println(row);
+  #endif
   int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
   int last_led_in_row  = NUM_LEDS / NUM_ROWS * (row + 1);
   for (int x = first_led_in_row; x <  last_led_in_row; x++) {
@@ -34,6 +47,7 @@ void DisplayOutput::stripRGBRow(int r, int g, int b, int row) {
 }
 
 void DisplayOutput::stripRGB(int colors[NUM_ROWS][3]){
+
     #ifdef DEBUG
       Serial.print("{");
     #endif
@@ -92,7 +106,6 @@ void DisplayOutput::fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_
        Serial.print(y2);
        Serial.print(" h: ");
        Serial.println(y1*2);
-       delay(500);
       #endif
 
       if (phase == WAXING_CRESCENT || phase == WANING_CRESCENT){
