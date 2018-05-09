@@ -33,6 +33,7 @@ int8_t time_zone = -4; // non DSTint8_t time_zone = -5;
 uint16_t sunrise_minute;
 uint16_t sunset_minute;
 uint8_t moon_phase_precentage;
+bool DST;
 
 //Last time
 
@@ -120,17 +121,36 @@ void settingsMenu() {
 
 }
 
+bool daylightSavings(){
+   bool DST = 0;
+   int year_of_centruy = rtc.now().year() - 2000;
+   int sunday_offset = (year_of_centruy + year_of_centruy/4 + 2) % 7;
+     
+   if(rtc.now().month() == 3 && rtc.now().day() == (14 - sunday_offset) && rtc.now().hour() >= 2){                                   
+        DST = 1;
+       }
+   if(rtc.now().month() == 3 && rtc.now().day() > (14 - sunday_offset) || rtc.now().month() > 3){
+        DST = 1;
+       }
+   if(rtc.now().month() == 11 && rtc.now().day() == (7 - sunday_offset) && rtc.now().hour() >= 2){
+        DST = 0;
+       }
+   if(rtc.now().month() == 11 && rtc.now().day() > (7 - sunday_offset) || rtc.now().month() > 11 || rtc.now().month() < 3){
+        DST = 0;
+       }
+       return DST;
+}
+
 void calculateDayParams () {
   tardis.Position(latitude, longitude);
   byte sunrise[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
   tardis.SunRise(sunrise);
-  sunrise_minute = (sunrise[tl_hour] * 60) + sunrise[tl_minute];
-  byte sunset[] = {  0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
+  sunrise_minute = ((sunrise[tl_hour] - 1 + DST) * 60) + sunrise[tl_minute];
+  byte sunset[] = { 0, 0, 0, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
   tardis.SunSet(sunset);
-  sunset_minute = (sunset[tl_hour] * 60) + sunset[tl_minute];
-  byte phase_today[] = {  0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
+  sunset_minute = ((sunset[tl_hour] - 1 + DST) * 60) + sunset[tl_minute];
+  byte phase_today[] = { 0, 0, 12, rtc.now().day(), rtc.now().month(), rtc.now().year() - 2000};
   moon_phase_precentage = tardis.MoonPhase(phase_today) * 100;
-
 }
 
 uint16_t currentTimeInMinutes() {
@@ -177,15 +197,20 @@ void updateScreen(bool daytime, uint8_t moon_phase_precentage) {
 
 void updateColorDisplay(bool force_update = 0) {
   if (latitude != last_latitude || longitude != longitude || last_date_in_days != currentDateinDays() || force_update) {
-#ifdef DEBUG
-    Serial.println("Day Update");
-#endif
+
     calculateDayParams ();
     colorstate.transitionTimes(sunrise_minute, sunset_minute);
-
+    DST = daylightSavings();
+    
     last_latitude = latitude;
     last_longitude = longitude;
     last_date_in_days = currentDateinDays();
+    #ifdef DEBUG
+      Serial.println("Day Update");
+      Serial.print("DST: ");
+      Serial.println(DST);
+    #endif
+    
   }
 
   if (last_time_in_minutes != currentTimeInMinutes() || force_update) {

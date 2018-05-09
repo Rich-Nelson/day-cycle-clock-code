@@ -114,7 +114,6 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
 }
 
 uint8_t ColorState::currentAngle(int16_t current_time_in_minutes){
-  Serial.println(next_transition);
   if (next_transition >= RISE_PEAK &&  next_transition <= NIGHT_START){
     current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)*(current_time_in_minutes - transition_time[NIGHT_END])/(transition_time[NIGHT_START] - transition_time[NIGHT_END]));
     // Serial.print("SUN Angle: ");
