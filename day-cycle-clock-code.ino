@@ -49,7 +49,9 @@ uint8_t last_servo_angle;
 
 
 #define UPDATE_INTERVAL 0
+#define TFT_RESET_INTERVAL 3600000
 long last_update = millis() - UPDATE_INTERVAL;
+long last_tft_reset = TFT_RESET_INTERVAL;
 
 void setup()
 {
@@ -325,6 +327,18 @@ void loop()
     updateColorDisplay();
     last_update = millis();
   }
+
+  /*
+   * TFT screen fades to white after being on for about 24hrs,
+   * resetting every hour attempts to fix this.
+   */
+  if ( millis() >   last_tft_reset + TFT_RESET_INTERVAL) {
+    displayoutput.tft.display(false);
+    delay(1000);
+    displayoutput.tft.display(true);
+    last_tft_reset = millis();
+  }
+
 
   ;
 }
