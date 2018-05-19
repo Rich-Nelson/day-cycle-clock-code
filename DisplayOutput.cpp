@@ -5,7 +5,9 @@ DisplayOutput::DisplayOutput(){
 }
 
 void DisplayOutput::begin(){
+  
   tft.begin();
+  tft.setRotation(2);
 }
 
 void DisplayOutput::servoMoveTo(uint8_t degree, uint16_t s_delay){
