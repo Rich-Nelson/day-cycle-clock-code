@@ -1,13 +1,29 @@
 #include "DisplayOutput.h"
 
-DisplayOutput::DisplayOutput(){
+// DisplayOutput::DisplayOutput(){
+//   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+//
+// }
+
+DisplayOutput::DisplayOutput() : lcd(LCD_I2C_ADDR, LCD_ROW , LCD_COL){
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+
 }
 
 void DisplayOutput::begin(){
-  
+  lcd.begin();
+	lcd.backlight();
+  lcd.createChar(0, uparrow);
+  lcd.setCursor(6, 0);
+  lcd.print("12:34pm");
+  lcd.setCursor(7,1);
+  lcd.write(ARROW);
+  lcd.setCursor(4, 2);
+  lcd.print("Mar 30, 2018");
+
   tft.begin();
   tft.setRotation(2);
+
 }
 
 void DisplayOutput::servoMoveTo(uint8_t degree, uint16_t s_delay){

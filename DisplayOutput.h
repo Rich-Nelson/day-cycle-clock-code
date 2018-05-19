@@ -13,7 +13,12 @@
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
 
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
 //#define DEBUG
+
+
 
 #define SERVO_PIN    3
 
@@ -27,9 +32,16 @@
 #define __DC 9
 #define __A0 10
 
+#define LCD_I2C_ADDR 0x3F
+#define LCD_ROW 4
+#define LCD_COL 20
+#define ARROW 0
+
 #define BLACK   0x0000
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
+
+
 
 enum MoonPhases {
             NEW_MOON,
@@ -53,6 +65,8 @@ class DisplayOutput {
     Servo servo;
     CRGB leds[NUM_LEDS];
     TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
+    LiquidCrystal_I2C lcd;
+
     void begin();
 
     // Mehods
@@ -89,6 +103,7 @@ class DisplayOutput {
     const bool MOON_SHADOW = 1;
     uint8_t tft_width = 128;
     uint8_t tft_height = 128;
+    uint8_t uparrow[3] = {0x4, 0xe, 0x1f};
 
 
 };
