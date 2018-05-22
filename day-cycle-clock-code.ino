@@ -34,6 +34,11 @@ enum SettingSelection {
 
 uint8_t selection = HOUR;
 
+Encoder myEnc(2,4);
+uint8_t last_encoder_position  = 0;
+uint8_t encoder_position;
+int8_t encoderIncrement;
+
 
 RTC_DS1307 rtc;
 
@@ -261,6 +266,23 @@ void updateColorDisplay(bool force_update = 0) {
 
 }
 
+int8_t checkIncrement(){
+   uint8_t encoder_reading = myEnc.read();
+   int8_t increment = 0;
+  if (encoder_reading % 4 == 0){
+    encoder_position = encoder_reading/4;
+  }
+  if (encoder_position != last_encoder_position) {
+    if( (encoder_position > last_encoder_position &&  encoder_position != last_encoder_position + 63) || last_encoder_position == encoder_position + 63){
+      increment = -1;
+    }else{
+      increment = 1;
+    }
+    last_encoder_position = encoder_position;
+  }
+  return increment;
+}
+
 void fastDayCycle() {
   calculateDayParams ();
   colorstate.transitionTimes(sunrise_minute, sunset_minute);
@@ -349,6 +371,11 @@ void loop()
   if ( millis() > last_update + UPDATE_INTERVAL) {
     updateColorDisplay();
     last_update = millis();
+  }
+
+  encoderIncrement = checkIncrement();
+  if(encoderIncrement != 0){
+    Serial.println(encoderIncrement);
   }
 
   /*
