@@ -91,6 +91,7 @@ class DisplayOutput {
     void fillValue();
     void fillAMPM();
     void fillCircle(uint16_t color);
+    void updateSelector(int8_t selection);
 
 
     //variables
@@ -103,7 +104,9 @@ class DisplayOutput {
     const bool MOON_SHADOW = 1;
     uint8_t tft_width = 128;
     uint8_t tft_height = 128;
-    uint8_t uparrow[3] = {0x4, 0xe, 0x1f};
+    uint8_t uparrow[8] = {0x4, 0xe, 0x1f};
+
+    uint8_t selector_location[5] = {7, 10, 26, 29, 35};
 
 
 };

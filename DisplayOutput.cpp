@@ -14,12 +14,27 @@ void DisplayOutput::begin(){
   lcd.begin();
 	lcd.backlight();
   lcd.createChar(0, uparrow);
+
   lcd.setCursor(6, 0);
-  lcd.print("12:34pm");
+  lcd.print("12");
+  lcd.setCursor(8, 0);
+  lcd.print(":");
+  lcd.setCursor(9, 0);
+  lcd.print("34");
+  lcd.setCursor(11, 0);
+  lcd.print("pm");
+
   lcd.setCursor(7,1);
   lcd.write(ARROW);
+
   lcd.setCursor(4, 2);
-  lcd.print("Mar 30, 2018");
+  lcd.print("Mar");
+  lcd.setCursor(8, 2);
+  lcd.print("30");
+  lcd.setCursor(10, 2);
+  lcd.print(",");
+  lcd.setCursor(12, 2);
+  lcd.print("2018");
 
   tft.begin();
   tft.setRotation(2);
@@ -344,4 +359,22 @@ void DisplayOutput::fillAMPM() {
 
 void DisplayOutput::fillCircle(uint16_t color) {
   tft.fillCircle(tft_width/2, tft_height/2, tft_width/2-2, color);
+}
+
+void DisplayOutput::updateSelector(int8_t selection) {
+
+  for (uint8_t i; i<2 ; i++ ){
+    uint8_t row = selector_location[selection] % 20;
+    uint8_t col = 1 + 2 * (selector_location[selection] / 20);
+
+    lcd.setCursor(row,col);
+    if(i){
+      lcd.print(" ");
+    }else{
+      lcd.write(ARROW);
+    }
+
+    selection = (((selection - 1) % 5) + 5) % 5;
+  }
+
 }

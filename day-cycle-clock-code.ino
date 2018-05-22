@@ -3,7 +3,7 @@
 #include <TimeLord.h>
 #include "ColorState.h"
 #include "DisplayOutput.h"
-
+#include <Encoder.h>
 
 
 
@@ -13,13 +13,26 @@ ColorState colorstate(false);
 DisplayOutput displayoutput;
 
 
-#define BUTTON_UP   16
-#define BUTTON_LEFT 15
-#define BUTTON_DOWN 14
+#define BUTTON_UP   16 //A2
+#define BUTTON_LEFT 15 //A1
+#define BUTTON_DOWN 14 //A0
+#define ENCODER_BUTTON 17 //A3
 
 Pushbutton button_up(BUTTON_UP);
 Pushbutton button_left(BUTTON_LEFT);
 Pushbutton button_down(BUTTON_DOWN);
+Pushbutton encoder_button(ENCODER_BUTTON);
+
+enum SettingSelection {
+  HOUR,
+  MINUTE,
+  MONTH,
+  DAY,
+  YEAR
+};
+#define NUM_SETIINGS 5
+
+uint8_t selection = HOUR;
 
 
 RTC_DS1307 rtc;
@@ -219,10 +232,10 @@ void updateColorDisplay(bool force_update = 0) {
   }
 
   if (last_time_in_minutes != currentTimeInMinutes() || force_update) {
-#ifdef DEBUG
-    Serial.print("Current Time in Minutes: ");
-    Serial.println(currentTimeInMinutes());
-#endif
+    #ifdef DEBUG
+        Serial.print("Current Time in Minutes: ");
+        Serial.println(currentTimeInMinutes());
+    #endif
     colorstate.updateColors(currentTimeInMinutes());
     displayoutput.stripRGB(colorstate.current_colors);
 
@@ -245,12 +258,6 @@ void updateColorDisplay(bool force_update = 0) {
   //    last_daytime = colorstate.daytime;
   //    last_moon_phase_precentage = moon_phase_precentage;
   //  }
-
-
-
-
-
-
 
 }
 
@@ -304,6 +311,8 @@ void fastMoonCycle() {
     delay(250);
   }
 }
+
+
 void loop()
 {
   //Settings Menu
@@ -323,8 +332,19 @@ void loop()
     fastDayCycle();
     //    fastMoonCycle();
     updateColorDisplay(FORCE);
-
   }
+
+    if (encoder_button.getSingleDebouncedPress()) {
+    selection++;
+    if (selection == NUM_SETIINGS){
+      selection = 0;
+    }
+    displayoutput.updateSelector(selection);
+    #ifdef DEBUG
+      //Serial.println(selection);
+    #endif
+  }
+
 
   if ( millis() > last_update + UPDATE_INTERVAL) {
     updateColorDisplay();
@@ -335,12 +355,14 @@ void loop()
    * TFT screen fades to white after being on for about 24hrs,
    * resetting every hour attempts to fix this.
    */
-  if ( millis() >   last_tft_reset + TFT_RESET_INTERVAL) {
-    displayoutput.tft.display(false);
-    delay(1000);
-    displayoutput.tft.display(true);
-    last_tft_reset = millis();
-  }
+//  if ( millis() >   last_tft_reset + TFT_RESET_INTERVAL) {
+//    displayoutput.tft.display(false);
+//    delay(1000);
+//    displayoutput.tft.display(true);
+//    last_tft_reset = millis();
+//  }
+
+  
 
 
   ;
