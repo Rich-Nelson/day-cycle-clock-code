@@ -6,8 +6,7 @@
 #include <Encoder.h>
 
 
-
-//#define DEBUG
+#define DEBUG
 
 ColorState colorstate(false);
 DisplayOutput displayoutput;
@@ -375,6 +374,7 @@ void loop()
 
   encoderIncrement = checkIncrement();
   if(encoderIncrement != 0){
+    Serial.print("encoderIncrement ");
     Serial.println(encoderIncrement);
   }
 

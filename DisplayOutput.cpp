@@ -1,12 +1,8 @@
 #include "DisplayOutput.h"
 
-// DisplayOutput::DisplayOutput(){
-//   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-//
-// }
+
 
 DisplayOutput::DisplayOutput() : lcd(LCD_I2C_ADDR, LCD_ROW , LCD_COL){
-  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 
 }
 
@@ -63,20 +59,17 @@ void DisplayOutput::servoDetach(){
 
 void DisplayOutput::stripRGBRow(int r, int g, int b, int row) {
   #ifdef DEBUG
-    Serial.print(r);
+    Serial.print(ledStripColor[row][0]);
     Serial.print(" , ");
-    Serial.print(g);
+    Serial.print(ledStripColor[row][1]);
     Serial.print(" , ");
-    Serial.print(b);
-    Serial.print(" , ");
+    Serial.print(ledStripColor[row][2]);
+    Serial.print(" , row:");
     Serial.println(row);
   #endif
-  int first_led_in_row = NUM_LEDS / NUM_ROWS * row;
-  int last_led_in_row  = NUM_LEDS / NUM_ROWS * (row + 1);
-  for (int x = first_led_in_row; x <  last_led_in_row; x++) {
-    leds[x] = CRGB(r, g, b);
-  }
-  FastLED.show();
+  analogWrite(ledStripColor[row][0],r);
+  analogWrite(ledStripColor[row][1],g);
+  analogWrite(ledStripColor[row][2],b);
 }
 
 void DisplayOutput::stripRGB(int colors[NUM_ROWS][3]){

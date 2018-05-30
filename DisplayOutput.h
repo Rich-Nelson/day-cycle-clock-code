@@ -16,21 +16,18 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-//#define DEBUG
+#define DEBUG
 
 
 
-#define SERVO_PIN    3
+#define SERVO_PIN    300  //3
 
-#define NUM_LEDS     45
+
 #define NUM_ROWS     3
-#define LED_PIN      6
-#define LED_TYPE     WS2812B
-#define COLOR_ORDER  GRB
 
-#define __CS 8
-#define __DC 9
-#define __A0 10
+#define __CS 800 //8
+#define __DC 900 //9
+#define __A0 1000 //10
 
 #define LCD_I2C_ADDR 0x3F
 #define LCD_ROW 4
@@ -63,7 +60,6 @@ class DisplayOutput {
 
     // Configuration
     Servo servo;
-    CRGB leds[NUM_LEDS];
     TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
     LiquidCrystal_I2C lcd;
 
@@ -107,7 +103,7 @@ class DisplayOutput {
     uint8_t uparrow[8] = {0x4, 0xe, 0x1f};
 
     uint8_t selector_location[5] = {7, 10, 26, 29, 35};
-
+    uint8_t ledStripColor[NUM_ROWS][3] = {{2,3,4},{5,6,7},{8,9,10}};
 
 };
 
