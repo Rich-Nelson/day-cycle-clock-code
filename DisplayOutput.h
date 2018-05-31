@@ -8,11 +8,10 @@
 #endif
 
 #include <Servo.h>
-#include "FastLED.h"
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C.h>
-
+#include <RGBmatrixPanel.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
@@ -24,6 +23,15 @@
 
 
 #define NUM_ROWS     3
+
+//32x64 Matrix pins
+#define OE  31
+#define LAT 30
+#define CLK 13
+#define A   A0
+#define B   A1
+#define C   A2
+#define D   A3
 
 #define __CS 800 //8
 #define __DC 900 //9
@@ -52,6 +60,7 @@ enum MoonPhases {
             };
 
 
+
 class DisplayOutput {
   public:
     // Constructor
@@ -62,6 +71,7 @@ class DisplayOutput {
     Servo servo;
     TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
     LiquidCrystal_I2C lcd;
+    RGBmatrixPanel matrix;
 
     void begin();
 

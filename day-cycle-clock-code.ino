@@ -15,7 +15,12 @@ DisplayOutput displayoutput;
 #define BUTTON_UP   16 //A2
 #define BUTTON_LEFT 15 //A1
 #define BUTTON_DOWN 14 //A0
-#define ENCODER_BUTTON 17 //A3
+
+#define ENCODER_BUTTON 17
+#define ENCODER_DT     18
+#define ENCODER_CLK    19
+long oldPosition  = -999;
+
 
 Pushbutton button_up(BUTTON_UP);
 Pushbutton button_left(BUTTON_LEFT);
@@ -33,7 +38,7 @@ enum SettingSelection {
 
 uint8_t selection = HOUR;
 
-Encoder myEnc(2,4);
+Encoder myEnc(ENCODER_DT ,ENCODER_CLK);
 uint8_t last_encoder_position  = 0;
 uint8_t encoder_position;
 int8_t encoderIncrement;
@@ -68,7 +73,7 @@ uint8_t last_servo_angle;
 #define FORCE 1
 
 
-#define UPDATE_INTERVAL 0
+#define UPDATE_INTERVAL 10
 #define TFT_RESET_INTERVAL 3600000
 long last_update = millis() - UPDATE_INTERVAL;
 long last_tft_reset = TFT_RESET_INTERVAL;
@@ -84,6 +89,12 @@ void setup()
 
   //  tardis.DstRules(3,2,11,1, 60);
 
+  #ifdef DEBUG
+      DateTime now = rtc.now();
+    
+    Serial.print("RTC time at startup: ");  Serial.print(now.year(), DEC);  Serial.print('/'); Serial.print(now.month(), DEC); Serial.print('/');  Serial.print(now.day(), DEC);  Serial.print(" ");  Serial.print(now.hour(), DEC); Serial.print(':');  Serial.print(now.minute(), DEC); Serial.print(':');  Serial.print(now.second(), DEC); Serial.println();
+  #endif
+  
 }
 
 
@@ -211,10 +222,13 @@ void updateScreen(bool daytime, uint8_t moon_phase_precentage) {
   Serial.println(daytime);
 #endif
   if (daytime) {
+    Serial.print("Sun");
     displayoutput.drawSun();
   } else {
+    Serial.print("Moon");
     displayoutput.updateMoon(moon_phase_precentage);
   }
+
 }
 
 void updateColorDisplay(bool force_update = 0) {
@@ -366,7 +380,6 @@ void loop()
     #endif
   }
 
-
   if ( millis() > last_update + UPDATE_INTERVAL) {
     updateColorDisplay();
     last_update = millis();
@@ -378,19 +391,4 @@ void loop()
     Serial.println(encoderIncrement);
   }
 
-  /*
-   * TFT screen fades to white after being on for about 24hrs,
-   * resetting every hour attempts to fix this.
-   */
-//  if ( millis() >   last_tft_reset + TFT_RESET_INTERVAL) {
-//    displayoutput.tft.display(false);
-//    delay(1000);
-//    displayoutput.tft.display(true);
-//    last_tft_reset = millis();
-//  }
-
-  
-
-
-  ;
 }

@@ -2,7 +2,9 @@
 
 
 
-DisplayOutput::DisplayOutput() : lcd(LCD_I2C_ADDR, LCD_ROW , LCD_COL){
+DisplayOutput::DisplayOutput() : matrix(A, B, C, D, CLK, LAT, OE, false, 64),
+                                 lcd(LCD_I2C_ADDR, LCD_ROW , LCD_COL){
+
 
 }
 
@@ -32,8 +34,13 @@ void DisplayOutput::begin(){
   lcd.setCursor(12, 2);
   lcd.print("2018");
 
-  tft.begin();
-  tft.setRotation(2);
+  matrix.begin();
+  matrix.setRotation(3);
+  matrix.fillCircle(15, 15, 15, matrix.Color333(7, 7, 0));
+  // matrix.drawLine(0, 0, matrix.width()-1, matrix.height()-1, matrix.Color333(7, 0, 0));
+  // matrix.drawLine(matrix.width()-1, 0, 0, matrix.height()-1, matrix.Color333(7, 0, 0));
+  //matrix.drawPixel(0, 0, matrix.Color333(7, 7, 7));
+
 
 }
 
@@ -75,6 +82,7 @@ void DisplayOutput::stripRGBRow(int r, int g, int b, int row) {
 void DisplayOutput::stripRGB(int colors[NUM_ROWS][3]){
 
     #ifdef DEBUG
+      Serial.println("LED Strip Colors");
       Serial.print("{");
     #endif
   for (int row; row < NUM_ROWS; row++){
@@ -96,8 +104,7 @@ void DisplayOutput::stripRGB(int colors[NUM_ROWS][3]){
 }
 
 void DisplayOutput::drawSun() {
-  tft.fillScreen();
-  tft.fillCircle(64, 64, 62, YELLOW);
+  matrix.fillCircle(15, 15, 15, matrix.Color333(7, 7, 0));
 }
 
 
