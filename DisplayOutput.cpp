@@ -3,7 +3,8 @@
 
 
 DisplayOutput::DisplayOutput() : matrix(A, B, C, D, CLK, LAT, OE, false, 64),
-                                 lcd(LCD_I2C_ADDR, LCD_ROW , LCD_COL){
+                                 lcd(LCD_I2C_ADDR, LCD_ROW , LCD_COL),
+                                 stepper(2,STEPPER_STEP,STEPPER_DIR){
 
 
 }
@@ -40,7 +41,26 @@ void DisplayOutput::begin(){
   // matrix.drawLine(0, 0, matrix.width()-1, matrix.height()-1, matrix.Color333(7, 0, 0));
   // matrix.drawLine(matrix.width()-1, 0, 0, matrix.height()-1, matrix.Color333(7, 0, 0));
   //matrix.drawPixel(0, 0, matrix.Color333(7, 7, 7));
+  pinMode(STEPPER_STEP, OUTPUT);
+  pinMode(STEPPER_DIR, OUTPUT);
+  stepper.setMaxSpeed(STEPPER_SPEED*MICRO_STEPS);
+  stepper.setAcceleration(STEPPER_ACCEL*MICRO_STEPS);
+//   stepper.moveTo(5000*MICRO_STEPS);
+//
+//   while (true){
+//     if (stepper.distanceToGo() == 0){
+//   delay(5000);
+//   stepper.moveTo(-stepper.currentPosition());
+// }
+//
+//
+// stepper.run();
+//   }
 
+  pinMode(LOWER_LIMIT, INPUT);
+  pinMode(UPPER_LIMIT, INPUT);
+
+  Serial.println("Upper Limit: "); Serial.println(digitalRead(LOWER_LIMIT));
 
 }
 
@@ -143,19 +163,19 @@ void DisplayOutput::fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_
 
       if (phase == WAXING_CRESCENT || phase == WANING_CRESCENT){
         if(side == 0){
-           tft.drawFastVLine(2*x0-x, y0-y1, y1-y2, color);
-           tft.drawFastVLine(2*x0-x, y0+y2, y1-y2, color);
+           // tft.drawFastVLine(2*x0-x, y0-y1, y1-y2, color);
+           // tft.drawFastVLine(2*x0-x, y0+y2, y1-y2, color);
         }
         if(side == 1){
-           tft.drawFastVLine(x, y0-y1, y1-y2, color);
-           tft.drawFastVLine(x, y0+y2, y1-y2, color);
+           // tft.drawFastVLine(x, y0-y1, y1-y2, color);
+           // tft.drawFastVLine(x, y0+y2, y1-y2, color);
         }
       }else{
         if(side == 0){
-           tft.drawFastVLine(2*x0-x, y0-y2, y2*2, color);
+           // tft.drawFastVLine(2*x0-x, y0-y2, y2*2, color);
         }
         if(side == 1){
-           tft.drawFastVLine(x, y0-y2, y2*2, color);
+           // tft.drawFastVLine(x, y0-y2, y2*2, color);
         }
       }
     }
@@ -177,7 +197,7 @@ void DisplayOutput::updateMoon( uint8_t moon_phase_precentage){
     moon_phase = quot * 2 + 2;
   }
 
-  tft.fillScreen();
+  // tft.fillScreen();
   //Draw Moon shadow gradient
   if (MOON_SHADOW && moon_phase_precentage % 50 > phase_buffer*2 && moon_phase_precentage % 50 < 50 - phase_buffer*2){
     if (moon_phase <= FULL_MOON){
@@ -246,10 +266,10 @@ void DisplayOutput::drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage,
 void DisplayOutput::printMenuTitle(String titleString) {
   fillMenuTitle();
   int x_offset = (4 - titleString.length()) * 8;
-  tft.setCursor(32 + x_offset, 16);
-  tft.setTextColor(BLACK);
-  tft.setTextSize(3);
-  tft.print(titleString);
+  // tft.setCursor(32 + x_offset, 16);
+  // tft.setTextColor(BLACK);
+  // tft.setTextSize(3);
+  // tft.print(titleString);
 }
 
 bool DisplayOutput::amCheck(int time_hour){
@@ -274,13 +294,13 @@ int DisplayOutput::convert12Hr(int time_hour){
 void DisplayOutput::printAMPM(bool AM){
   fillAMPM();
 
-  tft.setCursor(48, 84);
-  tft.setTextColor(BLACK);
-  tft.setTextSize(3);
+  // tft.setCursor(48, 84);
+  // tft.setTextColor(BLACK);
+  // tft.setTextSize(3);
   if(AM){
-    tft.print("AM");
+    // tft.print("AM");
   }else{
-    tft.print("PM");
+    // tft.print("PM");
   }
 }
 
@@ -290,18 +310,18 @@ void DisplayOutput::printTime(int time_hour, int time_min) {
   printAMPM(AM);
 
   fillValue();
-  tft.setCursor(7, 48);
-  tft.setTextColor(BLACK);
-  tft.setTextSize(4);
+  // tft.setCursor(7, 48);
+  // tft.setTextColor(BLACK);
+  // tft.setTextSize(4);
   if(time_hour < 10){
-    tft.print(0, DEC);
+    // tft.print(0, DEC);
   }
-  tft.print(time_hour, DEC);
-  tft.print(':');
+  // tft.print(time_hour, DEC);
+  // tft.print(':');
   if(time_min < 10){
-    tft.print(0, DEC);
+    // tft.print(0, DEC);
   }
-  tft.println(time_min, DEC);
+  // tft.println(time_min, DEC);
 
 
 
@@ -309,14 +329,14 @@ void DisplayOutput::printTime(int time_hour, int time_min) {
 
 void DisplayOutput::printDate(uint8_t month, uint8_t day, uint16_t year) {
   fillValue();
-  tft.setCursor(16, 42);
-  tft.setTextColor(BLACK);
-  tft.setTextSize(3);
-  tft.print(daysOfTheMonth[month]);
-  tft.print(' ');
-  tft.println(day, DEC);
-  tft.setCursor(28, 72);
-  tft.print(year, DEC);
+  // tft.setCursor(16, 42);
+  // tft.setTextColor(BLACK);
+  // tft.setTextSize(3);
+  // tft.print(daysOfTheMonth[month]);
+  // tft.print(' ');
+  // tft.println(day, DEC);
+  // tft.setCursor(28, 72);
+  // tft.print(year, DEC);
 }
 
 void DisplayOutput::printValue(int value, bool hr = 0) {
@@ -329,36 +349,36 @@ void DisplayOutput::printValue(int value, bool hr = 0) {
 
   int val_length = String(value).length();
   int cursor_x;
-  tft.setTextColor(BLACK);
+  // tft.setTextColor(BLACK);
   if (val_length <= 5) {
-    tft.setTextSize(4);
+    // tft.setTextSize(4);
     cursor_x = 6 + (5 - val_length) * 12;
   } else {
-    tft.setTextSize(3);
+    // tft.setTextSize(3);
     cursor_x = 6 + (5 - val_length) * 10;
   }
   fillValue();
-  tft.setCursor(cursor_x, 48);
-  tft.print(value);
+  // tft.setCursor(cursor_x, 48);
+  // tft.print(value);
 
 
 
 }
 
 void DisplayOutput::fillMenuTitle() {
-  tft.fillRect(32, 16, 70, 24, YELLOW);
+  // tft.fillRect(32, 16, 70, 24, YELLOW);
 }
 
 void DisplayOutput::fillValue() {
-  tft.fillRect(7, 48, 118, 30, YELLOW);
+  // tft.fillRect(7, 48, 118, 30, YELLOW);
 }
 
 void DisplayOutput::fillAMPM() {
-  tft.fillRect(48, 80, 28, 24, YELLOW);
+  // tft.fillRect(48, 80, 28, 24, YELLOW);
 }
 
 void DisplayOutput::fillCircle(uint16_t color) {
-  tft.fillCircle(tft_width/2, tft_height/2, tft_width/2-2, color);
+  // tft.fillCircle(tft_width/2, tft_height/2, tft_width/2-2, color);
 }
 
 void DisplayOutput::updateSelector(int8_t selection) {

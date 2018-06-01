@@ -14,13 +14,20 @@
 #include <RGBmatrixPanel.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <AccelStepper.h>
 
 #define DEBUG
 
-
+#define STEPPER_STEP 34
+#define STEPPER_DIR 35
+#define STEPPER_SPEED 10000
+#define STEPPER_ACCEL 20000
+#define MICRO_STEPS 1
 
 #define SERVO_PIN    300  //3
 
+#define LOWER_LIMIT 2
+#define UPPER_LIMIT 3
 
 #define NUM_ROWS     3
 
@@ -72,6 +79,7 @@ class DisplayOutput {
     TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
     LiquidCrystal_I2C lcd;
     RGBmatrixPanel matrix;
+    AccelStepper stepper;
 
     void begin();
 
@@ -113,7 +121,7 @@ class DisplayOutput {
     uint8_t uparrow[8] = {0x4, 0xe, 0x1f};
 
     uint8_t selector_location[5] = {7, 10, 26, 29, 35};
-    uint8_t ledStripColor[NUM_ROWS][3] = {{2,3,4},{5,6,7},{8,9,10}};
+    uint8_t ledStripColor[NUM_ROWS][3] = {{4,5,6},{7,8,9},{10,11,12}};
 
 };
 

@@ -19,7 +19,6 @@ DisplayOutput displayoutput;
 #define ENCODER_BUTTON 17
 #define ENCODER_DT     18
 #define ENCODER_CLK    19
-long oldPosition  = -999;
 
 
 Pushbutton button_up(BUTTON_UP);
@@ -390,5 +389,6 @@ void loop()
     Serial.print("encoderIncrement ");
     Serial.println(encoderIncrement);
   }
+
 
 }
