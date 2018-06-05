@@ -40,7 +40,13 @@ enum TimeLimits {
   TIME_UPPER_LIMIT
 
 };
-uint8_t timeSettingLimit[5][2]= {{0,23}, {0,59}, {1,12}, {1,31}, {1900,2100}};
+uint16_t timeSettingLimit[5][2]= {{0,23}, {0,59}, {1,12}, {1,31}, {1900,2100}};
+
+int16_t timeArray[5];
+void updateTimeArrayFromRTC();
+bool user_changed_time = 0;
+int last_rtc_update;
+#define RTC_UPDATE_INTERVAL 5000
 
 uint8_t selection = HOUR;
 
@@ -101,10 +107,38 @@ void setup()
     
     Serial.print("RTC time at startup: ");  Serial.print(now.year(), DEC);  Serial.print('/'); Serial.print(now.month(), DEC); Serial.print('/');  Serial.print(now.day(), DEC);  Serial.print(" ");  Serial.print(now.hour(), DEC); Serial.print(':');  Serial.print(now.minute(), DEC); Serial.print(':');  Serial.print(now.second(), DEC); Serial.println();
   #endif
-  
+  updateTimeArrayFromRTC();
 }
 
 
+void updateTimeArrayFromRTC(){
+  #ifdef DEBUG
+  Serial.print("Time Array Before Update: ");  Serial.print(timeArray[HOUR], DEC);  Serial.print(':'); Serial.print(timeArray[MINUTE], DEC); Serial.print(' ');  Serial.print(timeArray[MONTH], DEC);  Serial.print("/");  Serial.print(timeArray[DAY], DEC); Serial.print('/');  Serial.print(timeArray[YEAR], DEC); Serial.println();
+  #endif
+  DateTime now = rtc.now();
+  timeArray[HOUR] = now.hour();
+  timeArray[MINUTE] = now.minute();
+  timeArray[MONTH] = now.month();
+  timeArray[DAY] = now.day();
+  timeArray[YEAR] = now.year();
+
+  #ifdef DEBUG
+  Serial.print("Time Array After Update: ");  Serial.print(timeArray[HOUR], DEC);  Serial.print(':'); Serial.print(timeArray[MINUTE], DEC); Serial.print(' ');  Serial.print(timeArray[MONTH], DEC);  Serial.print("/");  Serial.print(timeArray[DAY], DEC); Serial.print('/');  Serial.print(timeArray[YEAR], DEC); Serial.println();
+  #endif
+}
+
+void updateRTCFromTimeArray(){
+  
+  DateTime now = rtc.now();
+  #ifdef DEBUG
+  Serial.print("RTC Before Update: ");  Serial.print(now.year(), DEC);  Serial.print('/'); Serial.print(now.month(), DEC); Serial.print('/');  Serial.print(now.day(), DEC);  Serial.print(" ");  Serial.print(now.hour(), DEC); Serial.print(':');  Serial.print(now.minute(), DEC); Serial.print(':');  Serial.print(now.second(), DEC); Serial.println();
+  #endif
+  rtc.adjust(DateTime(timeArray[YEAR], timeArray[MONTH], timeArray[DAY],timeArray[HOUR], timeArray[MINUTE]  , now.second()));
+  #ifdef DEBUG
+  now = rtc.now();
+  Serial.print("RTC After Update: ");  Serial.print(now.year(), DEC);  Serial.print('/'); Serial.print(now.month(), DEC); Serial.print('/');  Serial.print(now.day(), DEC);  Serial.print(" ");  Serial.print(now.hour(), DEC); Serial.print(':');  Serial.print(now.minute(), DEC); Serial.print(':');  Serial.print(now.second(), DEC); Serial.println();
+  #endif
+}
 
 /*
     Shows current name and value of a variabl on the screen
@@ -167,40 +201,40 @@ int getTime(enum SettingSelection_t time_unit, DateTime now){
 }
 
 int incrementValue(enum SettingSelection_t time_unit, int increment) {
+  user_changed_time = 1;
   DateTime now = rtc.now();
-  Serial.print("Now Before Set Set: ");  Serial.print(now.year(), DEC);  Serial.print('/'); Serial.print(now.month(), DEC); Serial.print('/');  Serial.print(now.day(), DEC);  Serial.print(" ");  Serial.print(now.hour(), DEC); Serial.print(':');  Serial.print(now.minute(), DEC); Serial.print(':');  Serial.print(now.second(), DEC); Serial.println();
-  int current_time_unit_value = getTime(time_unit, now);
-  int new_time_unit_value;
-  if(current_time_unit_value == timeSettingLimit[time_unit][TIME_LOWER_LIMIT] && increment == -1){
-        new_time_unit_value = timeSettingLimit[time_unit][TIME_UPPER_LIMIT];
+  Serial.print("Time Array Before User Change: ");  Serial.print(timeArray[HOUR], DEC);  Serial.print(':'); Serial.print(timeArray[MINUTE], DEC); Serial.print(' ');  Serial.print(timeArray[MONTH], DEC);  Serial.print("/");  Serial.print(timeArray[DAY], DEC); Serial.print('/');  Serial.print(timeArray[YEAR], DEC); Serial.println();
+  if(timeArray[time_unit] == timeSettingLimit[time_unit][TIME_LOWER_LIMIT] && increment == -1){
+        timeArray[time_unit] = timeSettingLimit[time_unit][TIME_UPPER_LIMIT];
   }
-  else if (current_time_unit_value == timeSettingLimit[time_unit][TIME_UPPER_LIMIT] && increment == 1){
-        new_time_unit_value = timeSettingLimit[time_unit][TIME_LOWER_LIMIT];
+  else if (timeArray[time_unit] == timeSettingLimit[time_unit][TIME_UPPER_LIMIT] && increment == 1){
+        timeArray[time_unit] = timeSettingLimit[time_unit][TIME_LOWER_LIMIT];
   }else{
-    new_time_unit_value = current_time_unit_value + increment;
+    timeArray[time_unit] = timeArray[time_unit] + increment;
   }
 //  int time_unit_range = timeSettingLimit[time_unit][1] - timeSettingLimit[time_unit][0];
 //  int new_time_unit_value = current_time_unit_value + increment;
 //  new_time_unit_value = (new_time_unit_value - timeSettingLimit[time_unit][0]) % (time_unit_range + 1) + timeSettingLimit[time_unit][0];
 
-  switch(time_unit){
-    case HOUR:
-      rtc.adjust(DateTime(now.year(), now.month(), now.day(), new_time_unit_value, now.minute()  , now.second()));
-      break;
-    case MINUTE:
-      rtc.adjust(DateTime(now.year(), now.month(), now.day(), now.hour(), new_time_unit_value, now.second()));
-      break;
-    case MONTH:
-      rtc.adjust(DateTime(now.year(), new_time_unit_value, now.day(), now.hour(), now.minute(), now.second()));
-      break;
-    case DAY:
-      rtc.adjust(DateTime(now.year(), now.month(), new_time_unit_value, now.hour(), now.minute(), now.second()));
-      break;
-    case YEAR:
-      rtc.adjust(DateTime(new_time_unit_value, now.month(), now.day(), now.hour(), now.minute(), now.second()));
-      break;
-  }
-  Serial.print("RTC After Set: ");  Serial.print(rtc.now().year(), DEC);  Serial.print('/'); Serial.print(rtc.now().month(), DEC); Serial.print('/');  Serial.print(rtc.now().day(), DEC);  Serial.print(" ");  Serial.print(rtc.now().hour(), DEC); Serial.print(':');  Serial.print(rtc.now().minute(), DEC); Serial.print(':');  Serial.print(rtc.now().second(), DEC); Serial.println();
+//  switch(time_unit){
+//    case HOUR:
+//      rtc.adjust(DateTime(now.year(), now.month(), now.day(), new_time_unit_value, now.minute()  , now.second()));
+//      break;
+//    case MINUTE:
+//      rtc.adjust(DateTime(now.year(), now.month(), now.day(), now.hour(), new_time_unit_value, now.second()));
+//      break;
+//    case MONTH:
+//      rtc.adjust(DateTime(now.year(), new_time_unit_value, now.day(), now.hour(), now.minute(), now.second()));
+//      break;
+//    case DAY:
+//      rtc.adjust(DateTime(now.year(), now.month(), new_time_unit_value, now.hour(), now.minute(), now.second()));
+//      break;
+//    case YEAR:
+//      rtc.adjust(DateTime(new_time_unit_value, now.month(), now.day(), now.hour(), now.minute(), now.second()));
+//      break;
+//  }
+//  Serial.print("RTC After Set: ");  Serial.print(rtc.now().year(), DEC);  Serial.print('/'); Serial.print(rtc.now().month(), DEC); Serial.print('/');  Serial.print(rtc.now().day(), DEC);  Serial.print(" ");  Serial.print(rtc.now().hour(), DEC); Serial.print(':');  Serial.print(rtc.now().minute(), DEC); Serial.print(':');  Serial.print(rtc.now().second(), DEC); Serial.println();
+  Serial.print("Time Array After User Change: ");  Serial.print(timeArray[HOUR], DEC);  Serial.print(':'); Serial.print(timeArray[MINUTE], DEC); Serial.print(' ');  Serial.print(timeArray[MONTH], DEC);  Serial.print("/");  Serial.print(timeArray[DAY], DEC); Serial.print('/');  Serial.print(timeArray[YEAR], DEC); Serial.println();
   
   
 //  displayoutput.fillCircle(YELLOW);
@@ -475,6 +509,16 @@ void loop()
   if ( millis() > last_update + UPDATE_INTERVAL) {
     updateColorDisplay();
     last_update = millis();
+  }
+
+  if ( millis() > last_rtc_update + RTC_UPDATE_INTERVAL) {
+    if(user_changed_time){
+      updateRTCFromTimeArray();
+    }else{
+      updateTimeArrayFromRTC();
+    }
+    user_changed_time = 0;
+    last_rtc_update = millis();
   }
 
   encoderIncrement = checkIncrement();
