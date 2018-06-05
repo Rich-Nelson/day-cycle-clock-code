@@ -26,7 +26,7 @@ Pushbutton button_left(BUTTON_LEFT);
 Pushbutton button_down(BUTTON_DOWN);
 Pushbutton encoder_button(ENCODER_BUTTON);
 
-enum SettingSelection {
+enum SettingSelection_t {
   HOUR,
   MINUTE,
   MONTH,
@@ -34,6 +34,13 @@ enum SettingSelection {
   YEAR
 };
 #define NUM_SETIINGS 5
+
+enum TimeLimits {
+  TIME_LOWER_LIMIT,
+  TIME_UPPER_LIMIT
+
+};
+uint8_t timeSettingLimit[5][2]= {{0,23}, {0,59}, {1,12}, {1,31}, {1900,2100}};
 
 uint8_t selection = HOUR;
 
@@ -72,7 +79,7 @@ uint8_t last_servo_angle;
 #define FORCE 1
 
 
-#define UPDATE_INTERVAL 10
+#define UPDATE_INTERVAL 60000
 #define TFT_RESET_INTERVAL 3600000
 long last_update = millis() - UPDATE_INTERVAL;
 long last_tft_reset = TFT_RESET_INTERVAL;
@@ -89,7 +96,8 @@ void setup()
   //  tardis.DstRules(3,2,11,1, 60);
 
   #ifdef DEBUG
-      DateTime now = rtc.now();
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    DateTime now = rtc.now();
     
     Serial.print("RTC time at startup: ");  Serial.print(now.year(), DEC);  Serial.print('/'); Serial.print(now.month(), DEC); Serial.print('/');  Serial.print(now.day(), DEC);  Serial.print(" ");  Serial.print(now.hour(), DEC); Serial.print(':');  Serial.print(now.minute(), DEC); Serial.print(':');  Serial.print(now.second(), DEC); Serial.println();
   #endif
@@ -136,6 +144,91 @@ int selectValue(String title, int value, int val_min, int val_max) {
     }
   }
   return value;
+}
+
+int getTime(enum SettingSelection_t time_unit, DateTime now){
+    switch(time_unit){
+    case HOUR:
+      return now.hour();
+      break;
+    case MINUTE:
+      return now.minute();
+      break;
+    case MONTH:
+      return now.month();
+      break;
+    case DAY:
+      return now.day();
+      break;
+    case YEAR:
+      return now.year();
+      break;
+    }
+}
+
+int incrementValue(enum SettingSelection_t time_unit, int increment) {
+  DateTime now = rtc.now();
+  Serial.print("Now Before Set Set: ");  Serial.print(now.year(), DEC);  Serial.print('/'); Serial.print(now.month(), DEC); Serial.print('/');  Serial.print(now.day(), DEC);  Serial.print(" ");  Serial.print(now.hour(), DEC); Serial.print(':');  Serial.print(now.minute(), DEC); Serial.print(':');  Serial.print(now.second(), DEC); Serial.println();
+  int current_time_unit_value = getTime(time_unit, now);
+  int new_time_unit_value;
+  if(current_time_unit_value == timeSettingLimit[time_unit][TIME_LOWER_LIMIT] && increment == -1){
+        new_time_unit_value = timeSettingLimit[time_unit][TIME_UPPER_LIMIT];
+  }
+  else if (current_time_unit_value == timeSettingLimit[time_unit][TIME_UPPER_LIMIT] && increment == 1){
+        new_time_unit_value = timeSettingLimit[time_unit][TIME_LOWER_LIMIT];
+  }else{
+    new_time_unit_value = current_time_unit_value + increment;
+  }
+//  int time_unit_range = timeSettingLimit[time_unit][1] - timeSettingLimit[time_unit][0];
+//  int new_time_unit_value = current_time_unit_value + increment;
+//  new_time_unit_value = (new_time_unit_value - timeSettingLimit[time_unit][0]) % (time_unit_range + 1) + timeSettingLimit[time_unit][0];
+
+  switch(time_unit){
+    case HOUR:
+      rtc.adjust(DateTime(now.year(), now.month(), now.day(), new_time_unit_value, now.minute()  , now.second()));
+      break;
+    case MINUTE:
+      rtc.adjust(DateTime(now.year(), now.month(), now.day(), now.hour(), new_time_unit_value, now.second()));
+      break;
+    case MONTH:
+      rtc.adjust(DateTime(now.year(), new_time_unit_value, now.day(), now.hour(), now.minute(), now.second()));
+      break;
+    case DAY:
+      rtc.adjust(DateTime(now.year(), now.month(), new_time_unit_value, now.hour(), now.minute(), now.second()));
+      break;
+    case YEAR:
+      rtc.adjust(DateTime(new_time_unit_value, now.month(), now.day(), now.hour(), now.minute(), now.second()));
+      break;
+  }
+  Serial.print("RTC After Set: ");  Serial.print(rtc.now().year(), DEC);  Serial.print('/'); Serial.print(rtc.now().month(), DEC); Serial.print('/');  Serial.print(rtc.now().day(), DEC);  Serial.print(" ");  Serial.print(rtc.now().hour(), DEC); Serial.print(':');  Serial.print(rtc.now().minute(), DEC); Serial.print(':');  Serial.print(rtc.now().second(), DEC); Serial.println();
+  
+  
+//  displayoutput.fillCircle(YELLOW);
+//  bool hr = false;
+//  if (title.equals("Hour")){
+//    hr = true;
+//  }
+//  displayoutput.printMenuTitle(title);
+//  displayoutput.printValue(value, hr);
+//  while (!button_left.getSingleDebouncedPress()) {
+//    if (button_up.getSingleDebouncedPress()) {
+//      if (value < val_max) {
+//        value++;
+//      } else {
+//        value = val_min;
+//      }
+//      displayoutput.printValue(value, hr);
+//    }
+//    if (button_down.getSingleDebouncedPress()) {
+//      if (value > val_min) {
+//        value--;
+//      } else {
+//        value = val_max;
+//      }
+//      displayoutput.printValue(value, hr);
+//    }
+//  }
+//  return value;
 }
 
 
@@ -386,8 +479,10 @@ void loop()
 
   encoderIncrement = checkIncrement();
   if(encoderIncrement != 0){
-    Serial.print("encoderIncrement ");
-    Serial.println(encoderIncrement);
+//    Serial.print("encoderIncrement ");  Serial.println(encoderIncrement);
+  incrementValue(selection, encoderIncrement);
+  //delay(100); //NOTE:change to non-blocking millis cool down for increment Value function
+  
   }
 
 

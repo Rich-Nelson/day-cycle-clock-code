@@ -20,6 +20,7 @@
 
 #define STEPPER_STEP 34
 #define STEPPER_DIR 35
+#define STEPPER_SLEEP 36
 #define STEPPER_SPEED 10000
 #define STEPPER_ACCEL 20000
 #define MICRO_STEPS 1
@@ -121,7 +122,7 @@ class DisplayOutput {
     uint8_t uparrow[8] = {0x4, 0xe, 0x1f};
 
     uint8_t selector_location[5] = {7, 10, 26, 29, 35};
-    uint8_t ledStripColor[NUM_ROWS][3] = {{4,5,6},{7,8,9},{10,11,12}};
+    uint8_t ledStripColor[NUM_ROWS][3] = {{6,5,4},{9,8,7},{12,11,10}};
 
 };
 

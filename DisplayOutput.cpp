@@ -43,10 +43,12 @@ void DisplayOutput::begin(){
   //matrix.drawPixel(0, 0, matrix.Color333(7, 7, 7));
   pinMode(STEPPER_STEP, OUTPUT);
   pinMode(STEPPER_DIR, OUTPUT);
+  pinMode(STEPPER_SLEEP, OUTPUT);
+  digitalWrite(STEPPER_SLEEP, HIGH);
   stepper.setMaxSpeed(STEPPER_SPEED*MICRO_STEPS);
   stepper.setAcceleration(STEPPER_ACCEL*MICRO_STEPS);
-//   stepper.moveTo(5000*MICRO_STEPS);
-//
+  stepper.moveTo(5000*MICRO_STEPS);
+
 //   while (true){
 //     if (stepper.distanceToGo() == 0){
 //   delay(5000);
@@ -56,6 +58,12 @@ void DisplayOutput::begin(){
 //
 // stepper.run();
 //   }
+
+// fix the screen with green
+// matrix.fillRect(0, 0, 32, 32, matrix.Color333(7, 7, 7));
+
+// stripRGBRow(255,255,255,0);
+//  while (true){}
 
   pinMode(LOWER_LIMIT, INPUT);
   pinMode(UPPER_LIMIT, INPUT);
