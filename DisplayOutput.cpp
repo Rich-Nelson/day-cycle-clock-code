@@ -14,33 +14,14 @@ void DisplayOutput::begin(){
 	lcd.backlight();
   lcd.createChar(0, uparrow);
 
-  lcd.setCursor(6, 0);
-  lcd.print("12");
-  lcd.setCursor(8, 0);
-  lcd.print(":");
-  lcd.setCursor(9, 0);
-  lcd.print("34");
-  lcd.setCursor(11, 0);
-  lcd.print("pm");
 
-  lcd.setCursor(7,1);
-  lcd.write(ARROW);
-
-  lcd.setCursor(4, 2);
-  lcd.print("Mar");
-  lcd.setCursor(8, 2);
-  lcd.print("30");
-  lcd.setCursor(10, 2);
-  lcd.print(",");
-  lcd.setCursor(12, 2);
-  lcd.print("2018");
 
   matrix.begin();
   matrix.setRotation(3);
-  matrix.fillCircle(15, 15, 15, matrix.Color333(7, 7, 0));
+
   // matrix.drawLine(0, 0, matrix.width()-1, matrix.height()-1, matrix.Color333(7, 0, 0));
   // matrix.drawLine(matrix.width()-1, 0, 0, matrix.height()-1, matrix.Color333(7, 0, 0));
-  //matrix.drawPixel(0, 0, matrix.Color333(7, 7, 7));
+
   pinMode(STEPPER_STEP, OUTPUT);
   pinMode(STEPPER_DIR, OUTPUT);
   pinMode(STEPPER_SLEEP, OUTPUT);
@@ -132,6 +113,7 @@ void DisplayOutput::stripRGB(int colors[NUM_ROWS][3]){
 }
 
 void DisplayOutput::drawSun() {
+  matrix.fillScreen(matrix.Color333(0, 0, 0));
   matrix.fillCircle(15, 15, 15, matrix.Color333(7, 7, 0));
 }
 
@@ -143,9 +125,15 @@ void DisplayOutput::fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_
   int32_t r2 = width/2+sq(r1)/(2*width);
   int32_t x02 = x0 - (r2 - width);
   #ifdef DEBUG
+     Serial.print(" x0: ");
+     Serial.print(x0);
+     Serial.print(" y0: ");
+     Serial.print(y0);
+     Serial.print(" r1: ");
+     Serial.println(r1);
      Serial.print("percent_transition: ");
      Serial.print(percent_transition);
-     Serial.print("width: ");
+     Serial.print(" width: ");
      Serial.print(width);
      Serial.print(" r2: ");
      Serial.print(r2);
@@ -171,19 +159,19 @@ void DisplayOutput::fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_
 
       if (phase == WAXING_CRESCENT || phase == WANING_CRESCENT){
         if(side == 0){
-           // tft.drawFastVLine(2*x0-x, y0-y1, y1-y2, color);
-           // tft.drawFastVLine(2*x0-x, y0+y2, y1-y2, color);
+           matrix.drawFastVLine(2*x0-x, y0-y1, y1-y2, color);
+           matrix.drawFastVLine(2*x0-x, y0+y2, y1-y2, color);
         }
         if(side == 1){
-           // tft.drawFastVLine(x, y0-y1, y1-y2, color);
-           // tft.drawFastVLine(x, y0+y2, y1-y2, color);
+           matrix.drawFastVLine(x, y0-y1, y1-y2, color);
+           matrix.drawFastVLine(x, y0+y2, y1-y2, color);
         }
       }else{
         if(side == 0){
-           // tft.drawFastVLine(2*x0-x, y0-y2, y2*2, color);
+           matrix.drawFastVLine(2*x0-x, y0-y2, y2*2, color);
         }
         if(side == 1){
-           // tft.drawFastVLine(x, y0-y2, y2*2, color);
+           matrix.drawFastVLine(x, y0-y2, y2*2, color);
         }
       }
     }
@@ -205,19 +193,19 @@ void DisplayOutput::updateMoon( uint8_t moon_phase_precentage){
     moon_phase = quot * 2 + 2;
   }
 
-  // tft.fillScreen();
+  matrix.fillScreen(matrix.Color333(0, 0, 0));
   //Draw Moon shadow gradient
-  if (MOON_SHADOW && moon_phase_precentage % 50 > phase_buffer*2 && moon_phase_precentage % 50 < 50 - phase_buffer*2){
-    if (moon_phase <= FULL_MOON){
-      moon_progress = -1;
-    }else{
-      moon_progress = 1;
-    }
-      drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(9*moon_progress), 0x4208);
-      drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(6*moon_progress), 0x8410);
-      drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(3*moon_progress), 0xDEDB);
-  }
-  drawMoon(moon_phase, moon_phase_precentage, tft_width/2, WHITE);
+  // if (MOON_SHADOW && moon_phase_precentage % 50 > phase_buffer*2 && moon_phase_precentage % 50 < 50 - phase_buffer*2){
+  //   if (moon_phase <= FULL_MOON){
+  //     moon_progress = -1;
+  //   }else{
+  //     moon_progress = 1;
+  //   }
+  //     drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(9*moon_progress), 0x4208);
+  //     drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(6*moon_progress), 0x8410);
+  //     drawMoon(moon_phase, moon_phase_precentage, tft_width/2+(3*moon_progress), 0xDEDB);
+  // }
+  drawMoon(moon_phase, moon_phase_precentage, tft_width/2, matrix.Color333(7, 7, 7));
 }
 
 void DisplayOutput::drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage, int16_t x0, int16_t color){
@@ -237,31 +225,31 @@ void DisplayOutput::drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage,
       break;
     case WAXING_CRESCENT:
       percent_transition = 100-moon_phase_precentage*100/25;
-      fillArc(x0, tft_height/2, 62, 1, percent_transition, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 1, percent_transition, moon_phase, color);
       break;
     case FIRST_QUARTER:
-      fillArc(x0, tft_height/2, 62, 1, 100, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 1, 100, moon_phase, color);
       break;
     case WAXING_GIBBOUS:
       percent_transition = (moon_phase_precentage-25)*100/25;
-      fillArc(x0, tft_height/2, 62, 1, 100, moon_phase, color);
-      fillArc(x0, tft_height/2, 62, 0, percent_transition, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 1, 100, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 0, percent_transition, moon_phase, color);
       break;
     case FULL_MOON:
-      fillArc(x0, tft_height/2, 62, 0, 100, moon_phase, color);
-      fillArc(x0, tft_height/2, 62, 1, 100, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 0, 100, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 1, 100, moon_phase, color);
       break;
     case WANING_GIBBOUS:
       percent_transition = 100-(moon_phase_precentage-50)*100/25;
-      fillArc(x0, tft_height/2, 62, 0, 100, moon_phase, color);
-      fillArc(x0, tft_height/2, 62, 1, percent_transition, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 0, 100, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 1, percent_transition, moon_phase, color);
       break;
     case THIRD_QUARTER:
-       fillArc(x0, tft_height/2, 62, 0, 100, moon_phase, color);
+       fillArc(x0, tft_height/2, tft_height/2, 0, 100, moon_phase, color);
       break;
     case WANING_CRESCENT:
       percent_transition = (moon_phase_precentage-75)*100/25;
-      fillArc(x0, tft_height/2, 62, 0, percent_transition, moon_phase, color);
+      fillArc(x0, tft_height/2, tft_height/2, 0, percent_transition, moon_phase, color);
       break;
   }
 
@@ -271,13 +259,20 @@ void DisplayOutput::drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage,
   #endif
 }
 
-void DisplayOutput::printMenuTitle(String titleString) {
-  fillMenuTitle();
-  int x_offset = (4 - titleString.length()) * 8;
-  // tft.setCursor(32 + x_offset, 16);
-  // tft.setTextColor(BLACK);
-  // tft.setTextSize(3);
-  // tft.print(titleString);
+void DisplayOutput::printTime(int16_t *currentTime) {
+
+ for (uint8_t i = 0; i < NUM_SETTINGS; i++){
+   printValue(i, currentTime[i]);
+ }
+
+  lcd.setCursor(8, 0);
+  lcd.print(":");
+
+  lcd.setCursor(10, 2);
+  lcd.print(",");
+
+  lcd.setCursor(selector_location[0][COL],selector_location[0][ROW]);
+  lcd.write(ARROW);
 }
 
 bool DisplayOutput::amCheck(int time_hour){
@@ -300,76 +295,46 @@ int DisplayOutput::convert12Hr(int time_hour){
 }
 
 void DisplayOutput::printAMPM(bool AM){
-  fillAMPM();
-
-  // tft.setCursor(48, 84);
-  // tft.setTextColor(BLACK);
-  // tft.setTextSize(3);
+  lcd.setCursor(11,0);
   if(AM){
-    // tft.print("AM");
+    lcd.print("am");
   }else{
-    // tft.print("PM");
+    lcd.print("pm");
   }
 }
 
-void DisplayOutput::printTime(int time_hour, int time_min) {
-  bool AM = amCheck(time_hour);
-  time_hour = convert12Hr(time_hour);
-  printAMPM(AM);
-
-  fillValue();
-  // tft.setCursor(7, 48);
-  // tft.setTextColor(BLACK);
-  // tft.setTextSize(4);
-  if(time_hour < 10){
-    // tft.print(0, DEC);
-  }
-  // tft.print(time_hour, DEC);
-  // tft.print(':');
-  if(time_min < 10){
-    // tft.print(0, DEC);
-  }
-  // tft.println(time_min, DEC);
-
-
-
-}
-
-void DisplayOutput::printDate(uint8_t month, uint8_t day, uint16_t year) {
-  fillValue();
-  // tft.setCursor(16, 42);
-  // tft.setTextColor(BLACK);
-  // tft.setTextSize(3);
-  // tft.print(daysOfTheMonth[month]);
-  // tft.print(' ');
-  // tft.println(day, DEC);
-  // tft.setCursor(28, 72);
-  // tft.print(year, DEC);
-}
-
-void DisplayOutput::printValue(int value, bool hr = 0) {
-
-  if(hr){
+void DisplayOutput::printValue(int unit, int value) {
+  if(unit == HOUR){
     bool AM = amCheck(value);
-    value = convert12Hr(value);
     printAMPM(AM);
+    value = convert12Hr(value);
   }
 
-  int val_length = String(value).length();
-  int cursor_x;
-  // tft.setTextColor(BLACK);
-  if (val_length <= 5) {
-    // tft.setTextSize(4);
-    cursor_x = 6 + (5 - val_length) * 12;
-  } else {
-    // tft.setTextSize(3);
-    cursor_x = 6 + (5 - val_length) * 10;
+  lcd.setCursor(time_setting_location[unit][COL],
+                time_setting_location[unit][ROW]);
+
+  if(unit == MONTH){
+    lcd.print(daysOfTheMonth[value]);
+  }else if( value < 10){
+    lcd.print("0");
+    lcd.print(value);
+  }else{
+    lcd.print(value);
   }
-  fillValue();
-  // tft.setCursor(cursor_x, 48);
-  // tft.print(value);
+}
 
+void DisplayOutput::updateSelector(int8_t selection) {
 
+  for (uint8_t i; i<2 ; i++ ){
+    lcd.setCursor(selector_location[selection][COL],selector_location[selection][ROW]);
+    if(i){
+      lcd.print(" "); //Erase selector arrow from previous position
+    }else{
+      lcd.write(ARROW);
+    }
+
+    selection = (((selection - 1) % 5) + 5) % 5;
+  }
 
 }
 
@@ -387,22 +352,4 @@ void DisplayOutput::fillAMPM() {
 
 void DisplayOutput::fillCircle(uint16_t color) {
   // tft.fillCircle(tft_width/2, tft_height/2, tft_width/2-2, color);
-}
-
-void DisplayOutput::updateSelector(int8_t selection) {
-
-  for (uint8_t i; i<2 ; i++ ){
-    uint8_t row = selector_location[selection] % 20;
-    uint8_t col = 1 + 2 * (selector_location[selection] / 20);
-
-    lcd.setCursor(row,col);
-    if(i){
-      lcd.print(" ");
-    }else{
-      lcd.write(ARROW);
-    }
-
-    selection = (((selection - 1) % 5) + 5) % 5;
-  }
-
 }

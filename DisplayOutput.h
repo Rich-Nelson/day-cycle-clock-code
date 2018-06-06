@@ -67,7 +67,19 @@ enum MoonPhases {
             WANING_CRESCENT
             };
 
+enum coordinates {
+            ROW,
+            COL
+            };
 
+enum SettingSelection_t {
+  HOUR,
+  MINUTE,
+  MONTH,
+  DAY,
+  YEAR
+};
+#define NUM_SETTINGS 5
 
 class DisplayOutput {
   public:
@@ -99,9 +111,8 @@ class DisplayOutput {
     bool amCheck(int time_hour);
     int convert12Hr(int time_hour);
     void printAMPM(bool AM);
-    void printTime(int time_hour, int time_min);
-    void printDate(uint8_t month, uint8_t day, uint16_t year);
-    void printValue(int value, bool hr = false);
+    void printTime(int16_t *currentTime);
+    void printValue(int unit, int value);
     void fillMenuTitle();
     void fillValue();
     void fillAMPM();
@@ -117,11 +128,12 @@ class DisplayOutput {
     uint8_t moon_phase;
     uint8_t phase_buffer = 2;
     const bool MOON_SHADOW = 1;
-    uint8_t tft_width = 128;
-    uint8_t tft_height = 128;
+    uint8_t tft_width = 32;
+    uint8_t tft_height = 32;
     uint8_t uparrow[8] = {0x4, 0xe, 0x1f};
 
-    uint8_t selector_location[5] = {7, 10, 26, 29, 35};
+    uint8_t time_setting_location[5][2] = {{0,6}, {0,9}, {2,4}, {2,8}, {2,12}};
+    uint8_t selector_location[5][2] = {{1,7}, {1,10}, {3,6}, {3,9}, {3,15}};
     uint8_t ledStripColor[NUM_ROWS][3] = {{6,5,4},{9,8,7},{12,11,10}};
 
 };
