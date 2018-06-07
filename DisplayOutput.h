@@ -16,7 +16,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <AccelStepper.h>
 
-#define DEBUG
+//#define DEBUG
 
 #define STEPPER_STEP 34
 #define STEPPER_DIR 35
@@ -126,7 +126,7 @@ class DisplayOutput {
   private:
     String daysOfTheMonth[13] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     uint8_t moon_phase;
-    uint8_t phase_buffer = 2;
+    uint8_t phase_buffer = 1;
     const bool MOON_SHADOW = 1;
     uint8_t tft_width = 32;
     uint8_t tft_height = 32;

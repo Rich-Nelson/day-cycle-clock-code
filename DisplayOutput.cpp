@@ -141,11 +141,12 @@ void DisplayOutput::fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_
      Serial.println(x02);
 
   #endif
-  if(x0+width < tft_width && x0+width > 0){
+  // if(x0+width < tft_width && x0+width > 0){
 
     for(int16_t x = x0; x < x0+r1; x++ ){
-      y1 = sqrt(sq(r1)-sq(x-x0));
-      y2 = sqrt(sq(r2)-sq(x-x02));
+      y1 = round(sqrt(sq(r1)-sq(x-x0)));
+      y2 = round(sqrt(sq(r2)-sq(x-x02)));
+      if(y2<0){y2=0;}
       #ifdef DEBUG
        Serial.print("x: ");
        Serial.print(x);
@@ -167,16 +168,18 @@ void DisplayOutput::fillArc(int32_t x0, int32_t y0, int32_t r1, bool side, int8_
            matrix.drawFastVLine(x, y0+y2, y1-y2, color);
         }
       }else{
-        if(side == 0){
-           matrix.drawFastVLine(2*x0-x, y0-y2, y2*2, color);
-        }
-        if(side == 1){
-           matrix.drawFastVLine(x, y0-y2, y2*2, color);
+        if (y2){
+          if(side == 0){
+             matrix.drawFastVLine(2*x0-x, y0-y2, y2*2, color);
+          }
+          if(side == 1){
+             matrix.drawFastVLine(x, y0-y2, y2*2, color);
+          }
         }
       }
     }
 
-  }
+  // }
 }
 
 

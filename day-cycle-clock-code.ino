@@ -4,6 +4,7 @@
 #include "ColorState.h"
 #include "DisplayOutput.h"
 #include <Encoder.h>
+#include <math.h>
 
 
 //#define DEBUG
@@ -39,7 +40,7 @@ uint16_t timeSettingLimit[5][2]= {{0,23}, {0,59}, {1,12}, {1,31}, {1900,2100}};
 int16_t currentTime[5];
 void updateCurrentTimeFromRTC();
 bool user_changed_time = 0;
-int last_rtc_update;
+
 
 uint8_t selection = HOUR;
 
@@ -82,8 +83,9 @@ uint8_t last_servo_angle;
 #define RTC_UPDATE_INTERVAL 30000
 #define UPDATE_INTERVAL 60000
 #define TFT_RESET_INTERVAL 3600000
-long last_update = millis() - UPDATE_INTERVAL;
-long last_tft_reset = TFT_RESET_INTERVAL;
+unsigned long last_update = millis() - UPDATE_INTERVAL;
+unsigned long last_tft_reset = TFT_RESET_INTERVAL;
+unsigned long last_rtc_update;
 
 void setup()
 {
@@ -180,34 +182,33 @@ int selectValue(String title, int value, int val_min, int val_max) {
   return value;
 }
 
-//int getTime(enum SettingSelection_t time_unit, DateTime now){
-//    switch(time_unit){
-//    case HOUR:
-//      return now.hour();
-//      break;
-//    case MINUTE:
-//      return now.minute();
-//      break;
-//    case MONTH:
-//      return now.month();
-//      break;
-//    case DAY:
-//      return now.day();
-//      break;
-//    case YEAR:
-//      return now.year();
-//      break;
-//    }
-//}
+void incrementParentUnit(enum SettingSelection_t time_unit, int increment){
+  switch(time_unit){
+    case MINUTE:
+      incrementValue(HOUR, increment);
+    break;
+    case HOUR:
+      incrementValue(DAY, increment);
+    break;
+    case DAY:
+      incrementValue(MONTH, increment);
+    break;
+    case MONTH:
+      incrementValue(YEAR, increment);
+    break;
+  }
+}
 
 int incrementValue(enum SettingSelection_t time_unit, int increment) {
   user_changed_time = 1;
   DateTime now = rtc.now();
   Serial.print("Time Array Before User Change: ");  Serial.print(currentTime[HOUR], DEC);  Serial.print(':'); Serial.print(currentTime[MINUTE], DEC); Serial.print(' ');  Serial.print(currentTime[MONTH], DEC);  Serial.print("/");  Serial.print(currentTime[DAY], DEC); Serial.print('/');  Serial.print(currentTime[YEAR], DEC); Serial.println();
   if(currentTime[time_unit] == timeSettingLimit[time_unit][TIME_LOWER_LIMIT] && increment == -1){
+        incrementParentUnit(time_unit, increment);
         currentTime[time_unit] = timeSettingLimit[time_unit][TIME_UPPER_LIMIT];
   }
   else if (currentTime[time_unit] == timeSettingLimit[time_unit][TIME_UPPER_LIMIT] && increment == 1){
+        incrementParentUnit(time_unit, increment);
         currentTime[time_unit] = timeSettingLimit[time_unit][TIME_LOWER_LIMIT];
   }else{
     currentTime[time_unit] = currentTime[time_unit] + increment;
@@ -451,6 +452,11 @@ void loop()
   }
 
   if ( millis() > last_rtc_update + RTC_UPDATE_INTERVAL) {
+    Serial.println("");
+    Serial.println("RTC/Time UPDATE: ");
+    Serial.print("Last Update: ");
+    Serial.println(last_rtc_update);
+    Serial.println("");
     if(user_changed_time){
       updateRTCFromCurrentTime();
     }else{
