@@ -120,7 +120,7 @@ void updateCurrentTimeFromRTC(){
   currentTime[MONTH] = now.month();
   currentTime[DAY] = now.day();
   currentTime[YEAR] = now.year();
-
+  displayoutput.printTime(currentTime);
   #ifdef DEBUG
   Serial.print("Time Array After Update: ");  Serial.print(currentTime[HOUR], DEC);  Serial.print(':'); Serial.print(currentTime[MINUTE], DEC); Serial.print(' ');  Serial.print(currentTime[MONTH], DEC);  Serial.print("/");  Serial.print(currentTime[DAY], DEC); Serial.print('/');  Serial.print(currentTime[YEAR], DEC); Serial.println();
   #endif

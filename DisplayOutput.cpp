@@ -13,6 +13,8 @@ void DisplayOutput::begin(){
   lcd.begin();
 	lcd.backlight();
   lcd.createChar(0, uparrow);
+  lcd.setCursor(selector_location[0][COL],selector_location[0][ROW]);
+  lcd.write(ARROW);
 
 
 
@@ -274,8 +276,8 @@ void DisplayOutput::printTime(int16_t *currentTime) {
   lcd.setCursor(10, 2);
   lcd.print(",");
 
-  lcd.setCursor(selector_location[0][COL],selector_location[0][ROW]);
-  lcd.write(ARROW);
+//  lcd.setCursor(selector_location[0][COL],selector_location[0][ROW]);
+//  lcd.write(ARROW);
 }
 
 bool DisplayOutput::amCheck(int time_hour){
