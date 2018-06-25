@@ -4,6 +4,7 @@
 
 DisplayOutput::DisplayOutput() : matrix(A, B, C, D, CLK, LAT, OE, false, 64),
                                  lcd(LCD_I2C_ADDR, LCD_ROW , LCD_COL),
+                                 lcd2(LCD2_I2C_ADDR, LCD_ROW , LCD_COL),
                                  stepper(2,STEPPER_STEP,STEPPER_DIR){
 
 
@@ -15,7 +16,19 @@ void DisplayOutput::begin(){
   lcd.createChar(0, uparrow);
   lcd.setCursor(selector_location[0][COL],selector_location[0][ROW]);
   lcd.write(ARROW);
-
+  lcd2.begin();
+	lcd2.backlight();
+  lcd2.setCursor(3, 0);
+  lcd2.print("Day Cycle Clock");
+  lcd2.setCursor(0, 2);
+  lcd2.print("Push & Turn The Knob");
+  lcd2.setCursor(0, 3);
+  lcd2.print("Watch Display Update");
+  lcd2.setCursor(0, 3);
+  lcd2.print("    In Real Time    ");
+  // lcd2.createChar(0, uparrow);
+  // lcd2.setCursor(selector_location[0][COL],selector_location[0][ROW]);
+  // lcd2.write(ARROW);
 
 
   matrix.begin();
@@ -30,17 +43,8 @@ void DisplayOutput::begin(){
   digitalWrite(STEPPER_SLEEP, HIGH);
   stepper.setMaxSpeed(STEPPER_SPEED*MICRO_STEPS);
   stepper.setAcceleration(STEPPER_ACCEL*MICRO_STEPS);
-  stepper.moveTo(5000*MICRO_STEPS);
 
-//   while (true){
-//     if (stepper.distanceToGo() == 0){
-//   delay(5000);
-//   stepper.moveTo(-stepper.currentPosition());
-// }
-//
-//
-// stepper.run();
-//   }
+
 
 // fix the screen with green
 // matrix.fillRect(0, 0, 32, 32, matrix.Color333(7, 7, 7));
@@ -50,21 +54,54 @@ void DisplayOutput::begin(){
 
   pinMode(LOWER_LIMIT, INPUT);
   pinMode(UPPER_LIMIT, INPUT);
+  homeStepper();
 
-  Serial.println("Upper Limit: "); Serial.println(digitalRead(LOWER_LIMIT));
+
+
+
+// while(true){
+  // Serial.println("Upper Limit: "); Serial.println(digitalRead(UPPER_LIMIT));
+  // Serial.println("Lower Limit: "); Serial.println(digitalRead(LOWER_LIMIT));
+// }
+
+}
+
+void DisplayOutput::homeStepper(){
+
+  while(digitalRead(LOWER_LIMIT) == 0){
+    // Serial.println(stepper.currentPosition());
+    stepper.moveTo(stepper.currentPosition() - 20*MICRO_STEPS);
+    stepperRun();
+  }
+  stepper.setCurrentPosition(0);
+}
+
+void DisplayOutput::stepperRun(){
+
+    stepper.run();
+
 
 }
 
 void DisplayOutput::servoMoveTo(uint8_t degree, uint16_t s_delay){
   #ifdef DEBUG
+  Serial.print("Degree: ");
+  Serial.println(degree);
     Serial.print("Servo Move To: ");
-    Serial.println(degree);
+    Serial.println(((float)degree/(float)180)*TOTAL_STEPS*MICRO_STEPS);
   #endif
-  servo.attach(SERVO_PIN);
-//  servo.writeMicroseconds(degree * 9.5 + 600);
-  servo.write(degree);
-  delay(s_delay);
-  servo.detach();
+  stepper.stop();
+  stepper.moveTo(((float)degree/(float)180)*TOTAL_STEPS*MICRO_STEPS);
+  stepperRun();
+  // if ( stepper.distanceToGo()){
+  //   Serial.println(stepper.distanceToGo());
+  //   stepper.run();
+  // }
+//   servo.attach(SERVO_PIN);
+// //  servo.writeMicroseconds(degree * 9.5 + 600);
+//   servo.write(degree);
+//   delay(s_delay);
+//   servo.detach();
 }
 
 void DisplayOutput::servoAttach(){

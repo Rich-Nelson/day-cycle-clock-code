@@ -21,14 +21,15 @@
 #define STEPPER_STEP 34
 #define STEPPER_DIR 35
 #define STEPPER_SLEEP 36
-#define STEPPER_SPEED 10000
-#define STEPPER_ACCEL 20000
-#define MICRO_STEPS 1
+#define STEPPER_SPEED 4000
+#define STEPPER_ACCEL 1000
+#define TOTAL_STEPS 2500
+#define MICRO_STEPS 4
 
 #define SERVO_PIN    300  //3
 
-#define LOWER_LIMIT 2
-#define UPPER_LIMIT 3
+#define LOWER_LIMIT 3
+#define UPPER_LIMIT 2
 
 #define NUM_ROWS     3
 
@@ -46,6 +47,7 @@
 #define __A0 1000 //10
 
 #define LCD_I2C_ADDR 0x3F
+#define LCD2_I2C_ADDR 0x26
 #define LCD_ROW 4
 #define LCD_COL 20
 #define ARROW 0
@@ -91,6 +93,7 @@ class DisplayOutput {
     Servo servo;
     TFT_ILI9163C tft = TFT_ILI9163C(__CS, __A0 , __DC);
     LiquidCrystal_I2C lcd;
+    LiquidCrystal_I2C lcd2;
     RGBmatrixPanel matrix;
     AccelStepper stepper;
 
@@ -100,6 +103,8 @@ class DisplayOutput {
     void servoMoveTo(uint8_t degree, uint16_t s_delay);
     void servoAttach();
     void servoDetach();
+    void homeStepper();
+    void stepperRun();
     void stripRGBRow(int r, int g, int b, int row);
     void stripRGB(int colors[NUM_ROWS][3]);
     void updateScreen(bool daytime, uint8_t moon_phase_precentage);
@@ -134,7 +139,7 @@ class DisplayOutput {
 
     uint8_t time_setting_location[5][2] = {{0,6}, {0,9}, {2,4}, {2,8}, {2,12}};
     uint8_t selector_location[5][2] = {{1,7}, {1,10}, {3,6}, {3,9}, {3,15}};
-    uint8_t ledStripColor[NUM_ROWS][3] = {{6,5,4},{9,8,7},{12,11,10}};
+    uint8_t ledStripColor[NUM_ROWS][3] = {{5,6,4},{8,9,7},{11,12,10}};
 
 };
 

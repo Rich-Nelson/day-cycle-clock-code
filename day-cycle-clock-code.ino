@@ -1,3 +1,4 @@
+
 #include <Pushbutton.h>
 #include "RTClib.h"
 #include <TimeLord.h>
@@ -17,9 +18,9 @@ DisplayOutput displayoutput;
 #define BUTTON_LEFT 15 //A1
 #define BUTTON_DOWN 14 //A0
 
-#define ENCODER_BUTTON 17
+#define ENCODER_BUTTON 19
 #define ENCODER_DT     18
-#define ENCODER_CLK    19
+#define ENCODER_CLK    17
 
 
 Pushbutton button_up(BUTTON_UP);
@@ -471,6 +472,15 @@ void loop()
     incrementValue(selection, encoderIncrement);
     updateColorDisplay();
   }
+
+
+
+  displayoutput.stepperRun();
+  
+
+
+
+
 
 
 }
