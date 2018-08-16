@@ -89,6 +89,8 @@ class DisplayOutput {
     const bool MOON_SHADOW = 1;
     uint8_t tft_width = 128;
     uint8_t tft_height = 128;
+    uint8_t tft_center_height_offset = 1;
+    uint8_t tft_y_center = tft_height / 2 + tft_center_height_offset;
 
 
 };

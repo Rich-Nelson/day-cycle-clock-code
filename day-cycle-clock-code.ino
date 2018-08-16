@@ -35,8 +35,7 @@ uint16_t sunset_minute;
 uint8_t moon_phase_precentage;
 bool DST;
 
-//Last time
-
+//Last date/time settings
 uint32_t last_date_in_days;
 uint16_t last_time_in_minutes;
 int8_t last_latitude;
@@ -80,7 +79,7 @@ void setup()
     @return The new value
 */
 int selectValue(String title, int value, int val_min, int val_max) {
-  displayoutput.fillCircle(YELLOW);
+  displayoutput.drawSun();
   bool hr = false;
   if (title.equals("Hour")){
     hr = true;
@@ -170,10 +169,10 @@ void displayTime() {
   displayoutput.drawSun();
   displayoutput.printTime(rtc.now().hour(), rtc.now().minute());
   delay(2000);
-  displayoutput.fillCircle(YELLOW);
+  displayoutput.drawSun();
   displayoutput.printDate(rtc.now().month(), rtc.now().day(), rtc.now().year());
   delay(2000);
-  displayoutput.fillCircle(YELLOW);
+  displayoutput.drawSun();
   displayoutput.printMenuTitle("Rise");
   displayoutput.printTime(sunrise_minute / 60, sunrise_minute % 60);
   delay(2000);
@@ -272,7 +271,6 @@ void fastDayCycle() {
 
     displayoutput.servoMoveTo(colorstate.current_angle, 28);
     displayoutput.servoAttach();
-    //    delay(28);
     last_transition = colorstate.next_transition;
   }
   for (uint16_t current_time_in_minutes = 1; current_time_in_minutes < colorstate.transition_time[NIGHT_END]; current_time_in_minutes = current_time_in_minutes + 5) {
@@ -288,8 +286,6 @@ void fastDayCycle() {
 
     displayoutput.servoMoveTo(colorstate.current_angle, 28);
     displayoutput.servoAttach();
-
-    //    delay(28);
     last_transition = colorstate.next_transition;
   }
   displayoutput.servoDetach();

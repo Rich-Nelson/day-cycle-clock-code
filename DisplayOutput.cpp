@@ -73,7 +73,7 @@ void DisplayOutput::stripRGB(int colors[NUM_ROWS][3]){
 
 void DisplayOutput::drawSun() {
   tft.fillScreen();
-  tft.fillCircle(64, 64, 62, YELLOW);
+  fillCircle(YELLOW);
 }
 
 
@@ -178,31 +178,31 @@ void DisplayOutput::drawMoon( uint8_t moon_phase, uint8_t moon_phase_precentage,
       break;
     case WAXING_CRESCENT:
       percent_transition = 100-moon_phase_precentage*100/25;
-      fillArc(x0, tft_height/2, 62, 1, percent_transition, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 1, percent_transition, moon_phase, color);
       break;
     case FIRST_QUARTER:
-      fillArc(x0, tft_height/2, 62, 1, 100, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 1, 100, moon_phase, color);
       break;
     case WAXING_GIBBOUS:
       percent_transition = (moon_phase_precentage-25)*100/25;
-      fillArc(x0, tft_height/2, 62, 1, 100, moon_phase, color);
-      fillArc(x0, tft_height/2, 62, 0, percent_transition, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 1, 100, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 0, percent_transition, moon_phase, color);
       break;
     case FULL_MOON:
-      fillArc(x0, tft_height/2, 62, 0, 100, moon_phase, color);
-      fillArc(x0, tft_height/2, 62, 1, 100, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 0, 100, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 1, 100, moon_phase, color);
       break;
     case WANING_GIBBOUS:
       percent_transition = 100-(moon_phase_precentage-50)*100/25;
-      fillArc(x0, tft_height/2, 62, 0, 100, moon_phase, color);
-      fillArc(x0, tft_height/2, 62, 1, percent_transition, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 0, 100, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 1, percent_transition, moon_phase, color);
       break;
     case THIRD_QUARTER:
-       fillArc(x0, tft_height/2, 62, 0, 100, moon_phase, color);
+       fillArc(x0, tft_y_center, 62, 0, 100, moon_phase, color);
       break;
     case WANING_CRESCENT:
       percent_transition = (moon_phase_precentage-75)*100/25;
-      fillArc(x0, tft_height/2, 62, 0, percent_transition, moon_phase, color);
+      fillArc(x0, tft_y_center, 62, 0, percent_transition, moon_phase, color);
       break;
   }
 
@@ -327,5 +327,5 @@ void DisplayOutput::fillAMPM() {
 }
 
 void DisplayOutput::fillCircle(uint16_t color) {
-  tft.fillCircle(tft_width/2, tft_height/2, tft_width/2-2, color);
+  tft.fillCircle(tft_width/2, tft_y_center, tft_width/2-2, color);
 }
