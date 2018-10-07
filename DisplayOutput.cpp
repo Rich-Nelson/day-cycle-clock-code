@@ -16,7 +16,6 @@ void DisplayOutput::servoMoveTo(uint8_t degree, uint16_t s_delay){
     Serial.println(degree);
   #endif
   servo.attach(SERVO_PIN);
-//  servo.writeMicroseconds(degree * 9.5 + 600);
   servo.write(degree);
   delay(s_delay);
   servo.detach();

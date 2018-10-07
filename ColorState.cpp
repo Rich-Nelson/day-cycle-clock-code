@@ -104,9 +104,6 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
         #endif
         float float_color_value = (float)colors[prev_transition][i][j] + (colors[next_transition][i][j] - colors[prev_transition][i][j])*transition_progress/100;
         current_colors[i][j] = static_cast<int>(float_color_value);
-        //******************************
-        // Serial.println(current_colors[i][j]); //commenting out breaks program?
-        //****************S**************
       }
     }
 
@@ -116,20 +113,15 @@ int ColorState::currentColors(int16_t current_time_in_minutes){
 uint8_t ColorState::currentAngle(int16_t current_time_in_minutes){
   if (next_transition >= RISE_PEAK &&  next_transition <= NIGHT_START){
     current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)*(current_time_in_minutes - transition_time[NIGHT_END])/(transition_time[NIGHT_START] - transition_time[NIGHT_END]));
-    // Serial.print("SUN Angle: ");
     daytime = 1;
   } else if (next_transition == NIGHT_MID){
     current_angle = static_cast<int>((float)(western_horizon - eastern_horizon) - (western_horizon - eastern_horizon)/2*(current_time_in_minutes - transition_time[NIGHT_START])/(transition_time[NIGHT_MID] - transition_time[NIGHT_START]));
-    // Serial.print("MOON Rising: ");
     daytime = 0;
   } else if (next_transition == NIGHT_END){
     current_angle = static_cast<int>((float)(western_horizon - eastern_horizon)/2 - (western_horizon - eastern_horizon)/2*(current_time_in_minutes)/(transition_time[NIGHT_END]));
-    // Serial.print("MOON Setting: ");
     daytime = 0;
   }
 
-
-  // Serial.println(current_angle);
   return current_angle;
 }
 

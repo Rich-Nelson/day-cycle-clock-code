@@ -27,7 +27,7 @@ TimeLord tardis;
 //Note: consider storing these in persistant storage
 int8_t latitude = 40;
 int16_t longitude = -75;
-int8_t time_zone = -4; // non DSTint8_t time_zone = -5;
+int8_t time_zone = -4;
 
 //Calulated Time Settings
 uint16_t sunrise_minute;
@@ -61,14 +61,12 @@ void setup()
   tardis.TimeZone(time_zone * 60);
   tardis.Position(latitude, longitude);
 
-  //  tardis.DstRules(3,2,11,1, 60);
-
 }
 
 
 
 /*
-    Shows current name and value of a variabl on the screen
+    Shows current name and value of a variable on the screen
     Allow the value to be adjusted via buttons
     Returns the new value
 
@@ -179,9 +177,6 @@ void displayTime() {
   displayoutput.printMenuTitle("Set");
   displayoutput.printTime(sunset_minute / 60, sunset_minute % 60);
   delay(2000);
-  //  printMenuTitle("Moon");
-  //  printValue(moon_phase_precentage);
-  //  delay(2000);
 }
 
 void updateScreen(bool daytime, uint8_t moon_phase_precentage) {
@@ -231,22 +226,6 @@ void updateColorDisplay(bool force_update = 0) {
 
     last_time_in_minutes = currentTimeInMinutes();
   }
-
-  //  if ( last_daytime != colorstate.daytime || last_moon_phase_precentage != moon_phase_precentage || force_update){
-  //    #ifdef DEBUG
-  //    Serial.println("Update Screen");
-  //    #endif
-  //    updateScreen(colorstate.daytime, moon_phase_precentage);
-  //
-  //    last_daytime = colorstate.daytime;
-  //    last_moon_phase_precentage = moon_phase_precentage;
-  //  }
-
-
-
-
-
-
 
 }
 
@@ -324,10 +303,6 @@ void loop()
     last_update = millis();
   }
 
-  /*
-   * TFT screen fades to white after being on for about 24hrs,
-   * resetting every hour attempts to fix this.
-   */
   if ( millis() >   last_tft_reset + TFT_RESET_INTERVAL) {
     displayoutput.tft.display(false);
     delay(1000);
