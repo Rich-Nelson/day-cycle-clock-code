@@ -15,6 +15,12 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <AccelStepper.h>
+#include <Pushbutton.h>
+
+
+#define ENCODE_BUTTON 19
+
+
 
 //#define DEBUG
 

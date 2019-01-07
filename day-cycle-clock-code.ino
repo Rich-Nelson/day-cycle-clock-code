@@ -18,7 +18,7 @@ DisplayOutput displayoutput;
 #define BUTTON_LEFT 15 //A1
 #define BUTTON_DOWN 14 //A0
 
-#define ENCODER_BUTTON 19
+#define ENCODER_BUTTON 0
 #define ENCODER_DT     18
 #define ENCODER_CLK    17
 
@@ -27,6 +27,9 @@ Pushbutton button_up(BUTTON_UP);
 Pushbutton button_left(BUTTON_LEFT);
 Pushbutton button_down(BUTTON_DOWN);
 Pushbutton encoder_button(ENCODER_BUTTON);
+
+
+
 
 
 #define NUM_SETTINGS 5
