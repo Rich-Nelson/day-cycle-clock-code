@@ -27,4 +27,4 @@ You will need some 3rd party libraries as well see below includes for reference:
 #include <TFT_ILI9163C.h>
 ```
 
-Come of these may already be included in the arduino environment, but I included them all jsut to be safe.
+Some of these may already be included in the arduino environment, but I included them all just to be safe.
